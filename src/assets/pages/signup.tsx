@@ -1,16 +1,6 @@
 import { useState } from "react"
-import {
-  GraduationCap,
-  BookOpen,
-  Award,
-  Laptop,
-  Globe,
-  ArrowRight,
-  Sparkles,
-  KeyRound,
-} from "lucide-react"
+import { GraduationCap, BookOpen, Award, Laptop, Globe, ArrowRight, Sparkles, KeyRound,} from "lucide-react"
 import logo from "../edunova-logo.webp"
-
 const programmeTypes = [
   {
     icon: GraduationCap,

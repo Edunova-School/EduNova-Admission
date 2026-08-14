@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { GraduationCap, BookOpen, Award, Laptop, Globe, ArrowRight, Sparkles, KeyRound,} from "lucide-react"
-import logo from "../edunova-logo.webp"
+import logo from "../assets/edunova-logo.webp"
 const programmeTypes = [
   {
     icon: GraduationCap,
@@ -50,7 +50,9 @@ export default function AdmissionPortal() {
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B8901F]/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
         <div className="relative px-4 md:px-8 py-14 max-w-4xl mx-auto text-center flex flex-col items-center">
-          <img src={logo} alt="EduNova University" className="h-12 w-auto mb-8" />
+          <div className="bg-[#F6F6F2]  mb-8 px-3 rounded-lg">
+            <img src={logo} alt="EduNova University" className="h-12 w-auto" />
+          </div>
           <span className="inline-flex items-center gap-1.5 font-mono text-xs tracking-[0.2em] uppercase text-[#B8901F] mb-4">
             <Sparkles size={13} />
             Admission Portal

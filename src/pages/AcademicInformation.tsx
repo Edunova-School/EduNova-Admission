@@ -18,26 +18,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function AcademicInformation() {
   const navigate = useNavigate()
   const { data, setAcademic } = useApplication()
-
   const [form, setForm] = useState<AcademicInfo>(
     data.academic.subjects.length > 0
       ? data.academic
       : { ...data.academic, subjects: [{ subject: "", grade: "" }, { subject: "", grade: "" }, { subject: "", grade: "" }, { subject: "", grade: "" }, { subject: "", grade: "" }] }
   )
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
-
   const updateSubject = (index: number, field: keyof Subject, value: string) => {
     const next = [...form.subjects]
     next[index] = { ...next[index], [field]: value }
     setForm({ ...form, subjects: next })
   }
-
   const addSubject = () => setForm({ ...form, subjects: [...form.subjects, { subject: "", grade: "" }] })
   const removeSubject = (index: number) => setForm({ ...form, subjects: form.subjects.filter((_, i) => i !== index) })
-
   const filledSubjects = form.subjects.filter((s) => s.subject && s.grade)
   const canContinue = form.schoolName && form.examType && form.examNumber && form.examYear && filledSubjects.length >= 5
 

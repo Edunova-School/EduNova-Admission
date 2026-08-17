@@ -40,7 +40,7 @@ export default function SubmitApplicationPage() {
         </div>
 
         <button
-          onClick={() => navigate("/admission/dashboard")}
+          onClick={() => navigate("/admission/apply/undergraduate/dashboard")}
           className="text-sm text-[#1E3A8A] font-medium hover:underline"
         >
           Back to Dashboard
@@ -86,7 +86,7 @@ export default function SubmitApplicationPage() {
       </div>
 
       <button
-        onClick={() => navigate("/admission/fee")}
+        onClick={() => navigate("/admission/apply/undergraduate/fee")}
         className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors w-fit"
       >
         <ArrowLeft size={16} /> Back

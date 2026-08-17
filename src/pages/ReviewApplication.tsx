@@ -53,7 +53,7 @@ export default function ReviewApplication() {
         <p className="text-sm text-black/55 mt-2">Check every section carefully. You can edit any part before submitting.</p>
       </div>
 
-      <SectionCard icon={User} title="Personal Information" editPath="/admission/personal-information">
+      <SectionCard icon={User} title="Personal Information" editPath="/admission/apply/undergraduate/personal-information">
         <Row label="Date of Birth" value={data.personal.dob} />
         <Row label="Gender" value={data.personal.gender} />
         <Row label="Nationality" value={data.personal.nationality} />
@@ -62,7 +62,7 @@ export default function ReviewApplication() {
         <Row label="Phone Number" value={data.personal.phone} />
       </SectionCard>
 
-      <SectionCard icon={BookOpen} title="Academic Information" editPath="/admission/academic-information">
+      <SectionCard icon={BookOpen} title="Academic Information" editPath="/admission/apply/undergraduate/academic-information">
         <Row label="School Attended" value={data.academic.schoolName} />
         <Row label="Exam Type" value={data.academic.examType} />
         <Row label="Exam Number" value={data.academic.examNumber} />
@@ -79,7 +79,7 @@ export default function ReviewApplication() {
         </div>
       </SectionCard>
 
-      <SectionCard icon={FileText} title="Documents" editPath="/admission/documents">
+      <SectionCard icon={FileText} title="Documents" editPath="/admission/apply/undergraduate/documents">
         <Row label="O'Level Result" value={data.documents.oLevelResult} />
         <Row label="Passport Photograph" value={data.documents.passportPhoto} />
         <Row label="Birth Certificate" value={data.documents.birthCertificate} />
@@ -97,13 +97,13 @@ export default function ReviewApplication() {
 
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate("/admission/documents")}
+          onClick={() => navigate("/admission/apply/undergraduate/documents")}
           className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors"
         >
           <ArrowLeft size={16} /> Back
         </button>
         <button
-          onClick={() => allComplete && navigate("/admission/fee")}
+          onClick={() => allComplete && navigate("/admission/apply/undergraduate/fee")}
           disabled={!allComplete}
           className="flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0"
         >

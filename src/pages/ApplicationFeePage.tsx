@@ -43,7 +43,7 @@ export default function ApplicationFeePage() {
         </div>
 
         <button
-          onClick={() => navigate("/admission/submit")}
+          onClick={() => navigate("/admission/apply/undergraduate/submit")}
           className="self-end flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
         >
           Continue <ArrowRight size={16} />
@@ -97,7 +97,7 @@ export default function ApplicationFeePage() {
       </div>
 
       <button
-        onClick={() => navigate("/admission/review")}
+        onClick={() => navigate("/admission/apply/undergraduate/review")}
         className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors w-fit"
       >
         <ArrowLeft size={16} /> Back

@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowRight, ArrowLeft, Upload, FileText, CheckCircle2 } from "lucide-react"
-import { useApplication, Documents as DocsType } from "./ApplicationContext"
+import { useApplication } from "./ApplicationContext"
+import type { Documents as DocsType } from "./ApplicationContext"
 
 const requiredDocs: { key: keyof DocsType; label: string; required: boolean }[] = [
   { key: "oLevelResult", label: "O'Level Result", required: true },
@@ -54,7 +55,7 @@ export default function DocumentsPage() {
   const handleContinue = () => {
     if (!canContinue) return
     setDocuments(docs)
-    navigate("/admission/review")
+    navigate("/admission/apply/undergraduate/review")
   }
 
   return (
@@ -79,7 +80,7 @@ export default function DocumentsPage() {
 
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate("/admission/academic-information")}
+          onClick={() => navigate("/admission/apply/undergraduate/academic-information")}
           className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors"
         >
           <ArrowLeft size={16} /> Back

@@ -1,6 +1,8 @@
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, Building2, GraduationCap, Clock,Layers, Award, CheckCircle2, Circle, FileText, Eye, EyeOff, Sparkles, Copy, Check, KeyRound, UserPlus, LogIn,} from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { ChevronLeft, ChevronRight, Building2, GraduationCap, Clock, Layers, Award, CheckCircle2, Circle, FileText, Eye, EyeOff, Sparkles, Copy, Check, KeyRound, UserPlus, LogIn } from "lucide-react"
 import logo from "../assets/edunova-logo.webp"
+import { useApplication } from "./ApplicationContext"
 const faculties = [
   "Faculty of Engineering & Technology",
   "Faculty of Computing & AI",
@@ -76,6 +78,8 @@ function BackButton({ onClick, label = "Back" }: { onClick: () => void; label?: 
   )
 }
 export default function UndergraduateAdmission() {
+  const navigate = useNavigate()
+  const { data, setSelection, setAccountCreated } = useApplication()
   const [step, setStep] = useState<Step>("entry")
   const [faculty, setFaculty] = useState("")
   const [department, setDepartment] = useState("")
@@ -337,7 +341,17 @@ export default function UndergraduateAdmission() {
                   <input name="confirmPassword" type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={handleFormChange} className="w-full border border-black/15 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#1E3A8A] transition-colors"/>
                 </div>
               </div>
-              <button onClick={() => setStep("created")} disabled={!canCreateAccount} className="w-full bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40">Create Account</button>
+              <button
+  onClick={() => {
+    setSelection(faculty, department, programme?.title ?? "")
+    setAccountCreated(form.firstName)
+    setStep("created")
+  }}
+  disabled={!canCreateAccount}
+  className="w-full bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40"
+>
+  Create Account
+</button>
             </div>
           </>
         )}
@@ -381,7 +395,7 @@ export default function UndergraduateAdmission() {
                 </div>
                 <div>
                   <p className="font-mono text-[10px] tracking-wide uppercase text-black/40">Undergraduate Application</p>
-                  <p className="font-serif font-semibold text-black">{programme?.title ?? "B.Eng. Mechanical Engineering"}</p>
+                  <p className="font-serif font-semibold text-black">{programme?.title ?? data.programmeTitle ?? "B.Eng. Mechanical Engineering"}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between mb-2">
@@ -405,9 +419,12 @@ export default function UndergraduateAdmission() {
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-6 bg-[#14263F] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
-                Continue: Personal Information
-              </button>
+              <button
+  onClick={() => navigate("/admission/apply/undergraduate/personal-information")}
+  className="w-full mt-6 bg-[#14263F] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-300"
+>
+  Continue: Personal Information
+</button>
             </div>
           </div>
         )}

@@ -6,12 +6,12 @@ import { useApplication } from "./ApplicationContext"
 const steps = [
   { label: "Account Created", path: null },
   { label: "Programme Selected", path: null },
-  { label: "Personal Information", path: "/admission/personal-information" },
-  { label: "Academic Information", path: "/admission/academic-information" },
-  { label: "Documents", path: "/admission/documents" },
-  { label: "Review Application", path: "/admission/review" },
-  { label: "Application Fee", path: "/admission/fee" },
-  { label: "Submit Application", path: "/admission/submit" },
+  { label: "Personal Information", path: "/admission/apply/undergraduate/personal-information" },
+  { label: "Academic Information", path: "/admission/apply/undergraduate/academic-information" },
+  { label: "Documents", path: "/admission/apply/undergraduate/documents" },
+  { label: "Review Application", path: "/admission/apply/undergraduate/review" },
+  { label: "Application Fee", path: "/admission/apply/undergraduate/fee" },
+  { label: "Submit Application", path: "/admission/apply/undergraduate/submit" },
 ]
 
 export default function ApplicantLayout() {

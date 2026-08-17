@@ -4,6 +4,36 @@ import { ArrowRight, ArrowLeft, BookOpen, Plus, Trash2 } from "lucide-react"
 import { useApplication } from "./ApplicationContext"
 import type { AcademicInfo, Subject } from "./ApplicationContext"
 
+const ADMISSION_BASE = "/admission/apply/undergraduate"
+
+const subjectCategories: { group: string; subjects: string[] }[] = [
+  {
+    group: "Core / General",
+    subjects: ["English Language", "Mathematics", "Civic Education"],
+  },
+  {
+    group: "Science",
+    subjects: [
+      "Physics", "Chemistry", "Biology", "Further Mathematics",
+      "Agricultural Science", "Geography", "Health Science", "Computer Studies",
+    ],
+  },
+  {
+    group: "Arts",
+    subjects: [
+      "Literature in English", "Government", "History", "Christian Religious Studies",
+      "Islamic Religious Studies", "French", "Fine Art", "Music", "CRS/IRS",
+    ],
+  },
+  {
+    group: "Commercial",
+    subjects: [
+      "Financial Accounting", "Commerce", "Economics", "Office Practice",
+      "Marketing", "Insurance", "Store Management",
+    ],
+  },
+]
+
 const gradeOptions = ["A1", "B2", "B3", "C4", "C5", "C6", "D7", "E8", "F9"]
 const inputClass = "border border-black/15 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#1E3A8A] transition-colors"
 
@@ -15,31 +45,76 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   )
 }
+
+function SubjectSelect({ value, onChange, usedSubjects }: {
+  value: string
+  onChange: (v: string) => void
+  usedSubjects: string[]
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`${inputClass} flex-1`}
+    >
+      <option value="">Select subject</option>
+      {subjectCategories.map((cat) => (
+        <optgroup key={cat.group} label={cat.group}>
+          {cat.subjects.map((s) => (
+            <option
+              key={s}
+              value={s}
+              disabled={usedSubjects.includes(s) && s !== value}
+            >
+              {s}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  )
+}
+
 export default function AcademicInformation() {
   const navigate = useNavigate()
   const { data, setAcademic } = useApplication()
+
   const [form, setForm] = useState<AcademicInfo>(
     data.academic.subjects.length > 0
       ? data.academic
-      : { ...data.academic, subjects: [{ subject: "", grade: "" }, { subject: "", grade: "" }, { subject: "", grade: "" }, { subject: "", grade: "" }, { subject: "", grade: "" }] }
+      : {
+          ...data.academic,
+          subjects: [
+            { subject: "English Language", grade: "" },
+            { subject: "Mathematics", grade: "" },
+            { subject: "", grade: "" },
+            { subject: "", grade: "" },
+            { subject: "", grade: "" },
+          ],
+        }
   )
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
+
   const updateSubject = (index: number, field: keyof Subject, value: string) => {
     const next = [...form.subjects]
     next[index] = { ...next[index], [field]: value }
     setForm({ ...form, subjects: next })
   }
+
   const addSubject = () => setForm({ ...form, subjects: [...form.subjects, { subject: "", grade: "" }] })
   const removeSubject = (index: number) => setForm({ ...form, subjects: form.subjects.filter((_, i) => i !== index) })
+
+  const usedSubjects = form.subjects.map((s) => s.subject).filter(Boolean)
   const filledSubjects = form.subjects.filter((s) => s.subject && s.grade)
   const canContinue = form.schoolName && form.examType && form.examNumber && form.examYear && filledSubjects.length >= 5
 
   const handleContinue = () => {
     if (!canContinue) return
     setAcademic({ ...form, subjects: filledSubjects })
-    navigate("/admission/documents")
+    navigate(`${ADMISSION_BASE}/documents`)
   }
 
   return (
@@ -90,7 +165,7 @@ export default function AcademicInformation() {
       </div>
 
       <div className="bg-white rounded-2xl border border-black/5 p-6">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-2">
           <p className="font-mono text-xs tracking-widest uppercase text-[#B8901F]">
             O'Level Subjects & Grades <span className="text-black/30 normal-case">(min. 5)</span>
           </p>
@@ -98,20 +173,22 @@ export default function AcademicInformation() {
             {filledSubjects.length} of {form.subjects.length} filled
           </span>
         </div>
+        <p className="text-xs text-black/40 mb-5">
+          Choose from Core, Science, Arts, or Commercial subjects — pick whichever combination matches what you sat for.
+        </p>
 
         <div className="flex flex-col gap-3">
           {form.subjects.map((s, i) => (
             <div key={i} className="flex items-center gap-3">
-              <input
+              <SubjectSelect
                 value={s.subject}
-                onChange={(e) => updateSubject(i, "subject", e.target.value)}
-                placeholder="Subject"
-                className={`${inputClass} flex-1`}
+                onChange={(v) => updateSubject(i, "subject", v)}
+                usedSubjects={usedSubjects}
               />
               <select
                 value={s.grade}
                 onChange={(e) => updateSubject(i, "grade", e.target.value)}
-                className={`${inputClass} w-24`}
+                className={`${inputClass} w-24 flex-shrink-0`}
               >
                 <option value="">Grade</option>
                 {gradeOptions.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -139,7 +216,7 @@ export default function AcademicInformation() {
 
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate("/admission/personal-information")}
+          onClick={() => navigate(`${ADMISSION_BASE}/personal-information`)}
           className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors"
         >
           <ArrowLeft size={16} /> Back

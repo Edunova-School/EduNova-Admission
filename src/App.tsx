@@ -4,7 +4,7 @@ import AdmissionPortal from "./pages/signup";
 import UndergraduateAdmission from "./pages/undergraduate";
 import { ApplicationProvider } from "./pages/ApplicationContext";
 import ApplicantLayout from "./pages/ApplicantLayout";
-import PersonalInformation from "./pages/PersonalInformation";
+import PersonalInformation from "./pages/Personalinformation";
 import AcademicInformation from "./pages/AcademicInformation";
 import DocumentsPage from "./pages/DocumentsPage";
 import ReviewApplication from "./pages/ReviewApplication";

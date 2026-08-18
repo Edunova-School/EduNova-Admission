@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ChevronLeft, ChevronRight, Building2, GraduationCap, Clock, Layers, Award, CheckCircle2, Circle, FileText, Eye, EyeOff, Sparkles, Copy, Check, KeyRound, UserPlus, LogIn } from "lucide-react"
 import logo from "../assets/edunova-logo.webp"
-import { useApplication } from "./ApplicationContext"
+import { useApplication} from "./ApplicationContext"
 const faculties = [
   "Faculty of Engineering & Technology",
   "Faculty of Computing & AI",
@@ -293,7 +293,6 @@ export default function UndergraduateAdmission() {
             </div>
           </>
         )}
-        {/* STEP: Create Account */}
         {step === "account" && (
           <>
             <BackButton onClick={goBack} />

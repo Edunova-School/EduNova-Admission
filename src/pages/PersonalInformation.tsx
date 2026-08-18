@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { ArrowRight, User } from "lucide-react"
 import { useApplication } from "./ApplicationContext"
 import type { PersonalInfo } from "./ApplicationContext"
-
 const ADMISSION_BASE = "/admission/apply/undergraduate"
-
 const lgasByState: Record<string, string[]> = {
   Lagos: [
     "Agege", "Ajeromi-Ifelodun", "Alimosho", "Amuwo-Odofin", "Apapa", "Badagry",
@@ -66,9 +64,7 @@ const lgasByState: Record<string, string[]> = {
     "Shagamu",
   ],
 }
-
 const nigerianStates = Object.keys(lgasByState)
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
@@ -77,33 +73,24 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   )
 }
-
 const inputClass = "border border-black/15 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#1E3A8A] transition-colors"
-
 export default function PersonalInformation() {
   const navigate = useNavigate()
   const { data, setPersonal } = useApplication()
   const [form, setForm] = useState<PersonalInfo>(data.personal)
-
   const availableLgas = form.state ? lgasByState[form.state] ?? [] : []
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
-
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Reset LGA whenever the state changes, since the old LGA won't belong to the new state
     setForm({ ...form, state: e.target.value, lga: "" })
   }
-
   const canContinue = form.dob && form.gender && form.nationality && form.state && form.lga && form.address && form.phone
-
   const handleContinue = () => {
     if (!canContinue) return
     setPersonal(form)
     navigate(`${ADMISSION_BASE}/academic-information`)
   }
-
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -119,7 +106,6 @@ export default function PersonalInformation() {
           </div>
           <p className="font-mono text-xs tracking-widest uppercase text-[#B8901F]">Basic Details</p>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field label="Date of Birth">
             <input type="date" name="dob" value={form.dob} onChange={handleChange} className={inputClass} />
@@ -132,7 +118,6 @@ export default function PersonalInformation() {
             </select>
           </Field>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field label="Nationality">
             <input name="nationality" value={form.nationality} onChange={handleChange} placeholder="Nigerian" className={inputClass} />
@@ -146,28 +131,14 @@ export default function PersonalInformation() {
         </div>
 
         <Field label="Local Government Area">
-          <select
-            name="lga"
-            value={form.lga}
-            onChange={handleChange}
-            disabled={!form.state}
-            className={`${inputClass} disabled:bg-black/[0.02] disabled:text-black/30 disabled:cursor-not-allowed`}
-          >
+          <select name="lga" value={form.lga} onChange={handleChange} disabled={!form.state} className={`${inputClass} disabled:bg-black/[0.02] disabled:text-black/30 disabled:cursor-not-allowed`}>
             <option value="">{form.state ? "Select..." : "Select a state first"}</option>
             {availableLgas.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </Field>
-
         <Field label="Residential Address">
-          <textarea
-            name="address"
-            value={form.address}
-            onChange={handleChange as any}
-            rows={3}
-            className={`${inputClass} resize-none`}
-          />
+          <textarea name="address" value={form.address} onChange={handleChange as any} rows={3} className={`${inputClass} resize-none`}/>
         </Field>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field label="Phone Number">
             <input name="phone" type="tel" value={form.phone} onChange={handleChange} className={inputClass} />
@@ -177,12 +148,7 @@ export default function PersonalInformation() {
           </Field>
         </div>
       </div>
-
-      <button
-        onClick={handleContinue}
-        disabled={!canContinue}
-        className="self-end flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0"
-      >
+      <button onClick={handleContinue} disabled={!canContinue} className="self-end flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
         Continue <ArrowRight size={16} />
       </button>
     </div>

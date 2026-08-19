@@ -1,5 +1,7 @@
 import { createContext, useContext, useState} from "react"
 import type { ReactNode } from "react"
+import type { Track } from "./trackconfig";
+
 export interface PersonalInfo {
   dob: string
   gender: string
@@ -11,12 +13,12 @@ export interface PersonalInfo {
   altPhone: string
 }
 
-export interface Subject {
-  subject: string
-  grade: string
-}
+export interface Subject { subject: string; grade: string }
 
-export interface AcademicInfo {
+// One flexible shape covering both O'Level-style and degree-style education,
+// so a single EducationPage can render the right subset per track.
+export interface EducationInfo {
+  // O'Level mode (undergraduate / certificate / odl)
   schoolName: string
   examType: string
   examNumber: string
@@ -24,25 +26,39 @@ export interface AcademicInfo {
   subjects: Subject[]
   jambNumber: string
   jambScore: string
+  // Degree mode (postgraduate / international)
+  institution: string
+  degree: string
+  graduationYear: string
+  classOfDegree: string
+  cgpa: string
+  certificate: string
+  transcript: string
 }
 
 export interface Documents {
-  oLevelResult: string
+  primaryResult: string   // O'Level result OR degree certificate, depending on track
   passportPhoto: string
-  birthCertificate: string
-  validId: string
-  jambSlip: string
+  idDocument: string       // birth certificate / valid ID, depending on track
+  supporting: string       // JAMB slip / referee letter / visa doc, depending on track
 }
 
+export type ApplicantType = "eduNovaGraduate" | "external" | ""
+
 interface ApplicationState {
+  track: Track | null
+  applicantId: string
   applicationNumber: string
-  applicantName: string
   faculty: string
   department: string
   programmeTitle: string
+  applicantType: ApplicantType
+  isEduNovaGraduate: boolean
+  applicantName: string
+  applicantEmail: string
   accountCreated: boolean
   personal: PersonalInfo
-  academic: AcademicInfo
+  education: EducationInfo
   documents: Documents
   feePaid: boolean
   submitted: boolean
@@ -50,75 +66,127 @@ interface ApplicationState {
 
 interface ApplicationContextValue {
   data: ApplicationState
+  setTrack: (track: Track) => void
   setSelection: (faculty: string, department: string, programmeTitle: string) => void
-  setAccountCreated: (name: string) => void
+  setApplicantType: (type: ApplicantType) => void
+  prefillFromEduNovaRecord: (studentId: string) => void
+  setAccountCreated: (name: string, email: string) => void
   setPersonal: (info: PersonalInfo) => void
-  setAcademic: (info: AcademicInfo) => void
+  setEducation: (info: EducationInfo) => void
   setDocuments: (docs: Documents) => void
   setFeePaid: (paid: boolean) => void
   setSubmitted: (val: boolean) => void
-  isProgrammeSelected: boolean
   isPersonalComplete: boolean
-  isAcademicComplete: boolean
+  isEducationComplete: (mode: "olevel" | "degree") => boolean
   isDocumentsComplete: boolean
-  completedCount: number
-  totalSteps: number
-  progressPercent: number
+  progressPercent: (mode: "olevel" | "degree") => number
+}
+
+const emptyEducation: EducationInfo = {
+  schoolName: "", examType: "", examNumber: "", examYear: "", subjects: [], jambNumber: "", jambScore: "",
+  institution: "", degree: "", graduationYear: "", classOfDegree: "", cgpa: "", certificate: "", transcript: "",
 }
 
 const defaultState: ApplicationState = {
-  applicationNumber: "EDU-UG-2026-001245",
-  applicantName: "",
+  track: null,
+  applicantId: "",
+  applicationNumber: "",
   faculty: "",
   department: "",
   programmeTitle: "",
+  applicantType: "",
+  isEduNovaGraduate: false,
+  applicantName: "",
+  applicantEmail: "",
   accountCreated: false,
   personal: { dob: "", gender: "", nationality: "", state: "", lga: "", address: "", phone: "", altPhone: "" },
-  academic: { schoolName: "", examType: "", examNumber: "", examYear: "", subjects: [], jambNumber: "", jambScore: "" },
-  documents: { oLevelResult: "", passportPhoto: "", birthCertificate: "", validId: "", jambSlip: "" },
+  education: emptyEducation,
+  documents: { primaryResult: "", passportPhoto: "", idDocument: "", supporting: "" },
   feePaid: false,
   submitted: false,
 }
 
+// Mock lookup standing in for a future GET /api/students/{id} call to Flask.
+const mockEduNovaRecord = {
+  fullName: "Edwin Adeyi-Samuel",
+  email: "edwin@example.com",
+  previousProgramme: "B.Eng. Mechanical Engineering",
+  graduationYear: "2026",
+  classOfDegree: "Second Class Upper",
+  cgpa: "4.32",
+}
+
+const applicationNumberPrefix: Record<Track, string> = {
+  undergraduate: "EDU-UG", postgraduate: "EDU-PG", certificate: "EDU-PC", odl: "EDU-OD", international: "EDU-IP",
+}
+
 const ApplicationContext = createContext<ApplicationContextValue | undefined>(undefined)
 
-// NOTE: This holds application progress in memory only (React state).
-// Once the Flask backend exists, each `set...` function below should also
-// POST/PATCH the relevant section to something like
-// `/api/applications/{applicationNumber}/personal-info`, and initial state
-// should be hydrated from a GET on mount instead of `defaultState`.
+// NOTE: in-memory only. Once Flask exists, each set... function should also
+// save the relevant section to something like /api/applications/{id}/{section},
+// and initial state should hydrate from a GET on mount.
 export function ApplicationProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ApplicationState>(defaultState)
 
+  const setTrack = (track: Track) =>
+    setData((prev) => ({
+      ...prev,
+      track,
+      applicationNumber: prev.applicationNumber || `${applicationNumberPrefix[track]}-2026-${Math.floor(Math.random() * 900000 + 100000)}`,
+    }))
+
   const setSelection = (faculty: string, department: string, programmeTitle: string) =>
     setData((prev) => ({ ...prev, faculty, department, programmeTitle }))
-  const setAccountCreated = (name: string) =>
-    setData((prev) => ({ ...prev, applicantName: name, accountCreated: true }))
+
+  const setApplicantType = (type: ApplicantType) =>
+    setData((prev) => ({ ...prev, applicantType: type, isEduNovaGraduate: type === "eduNovaGraduate" }))
+
+  const prefillFromEduNovaRecord = (_studentId: string) =>
+    setData((prev) => ({
+      ...prev,
+      applicantName: mockEduNovaRecord.fullName,
+      applicantEmail: mockEduNovaRecord.email,
+      accountCreated: true,
+      applicantId: prev.applicantId || "EDU-APP-001245",
+      education: {
+        ...prev.education,
+        institution: "EduNova University",
+        degree: mockEduNovaRecord.previousProgramme,
+        graduationYear: mockEduNovaRecord.graduationYear,
+        classOfDegree: mockEduNovaRecord.classOfDegree,
+        cgpa: mockEduNovaRecord.cgpa,
+      },
+    }))
+
+  const setAccountCreated = (name: string, email: string) =>
+    setData((prev) => ({ ...prev, accountCreated: true, applicantId: prev.applicantId || "EDU-APP-001245", applicantName: name, applicantEmail: email }))
+
   const setPersonal = (info: PersonalInfo) => setData((prev) => ({ ...prev, personal: info }))
-  const setAcademic = (info: AcademicInfo) => setData((prev) => ({ ...prev, academic: info }))
+  const setEducation = (info: EducationInfo) => setData((prev) => ({ ...prev, education: info }))
   const setDocuments = (docs: Documents) => setData((prev) => ({ ...prev, documents: docs }))
   const setFeePaid = (paid: boolean) => setData((prev) => ({ ...prev, feePaid: paid }))
   const setSubmitted = (val: boolean) => setData((prev) => ({ ...prev, submitted: val }))
 
-  const isProgrammeSelected = !!data.programmeTitle
-  const isPersonalComplete = !!(data.personal.dob && data.personal.gender && data.personal.address && data.personal.phone)
-  const isAcademicComplete = !!(data.academic.schoolName && data.academic.examNumber && data.academic.subjects.length >= 5)
-  const isDocumentsComplete = !!(
-    data.documents.oLevelResult && data.documents.passportPhoto &&
-    data.documents.birthCertificate && data.documents.validId
-  )
+  const isPersonalComplete = !!(data.personal.dob && data.personal.gender && data.personal.state && data.personal.lga && data.personal.address && data.personal.phone)
 
-  const flags = [data.accountCreated, isProgrammeSelected, isPersonalComplete, isAcademicComplete, isDocumentsComplete, isPersonalComplete && isAcademicComplete && isDocumentsComplete, data.feePaid, data.submitted]
-  const totalSteps = flags.length
-  const completedCount = flags.filter(Boolean).length
-  const progressPercent = Math.round((completedCount / totalSteps) * 100)
+  const isEducationComplete = (mode: "olevel" | "degree") =>
+    mode === "olevel"
+      ? !!(data.education.schoolName && data.education.examNumber && data.education.subjects.length >= 5)
+      : !!(data.education.institution && data.education.degree && data.education.graduationYear && data.education.cgpa && data.education.transcript)
+
+  const isDocumentsComplete = !!(data.documents.primaryResult && data.documents.passportPhoto && data.documents.idDocument)
+
+  const progressPercent = (mode: "olevel" | "degree") => {
+    const flags = [data.accountCreated, !!data.programmeTitle, isPersonalComplete, isEducationComplete(mode), isDocumentsComplete, data.feePaid, data.submitted]
+    return Math.round((flags.filter(Boolean).length / flags.length) * 100)
+  }
 
   return (
     <ApplicationContext.Provider
       value={{
-        data, setSelection, setAccountCreated, setPersonal, setAcademic, setDocuments, setFeePaid, setSubmitted,
-        isProgrammeSelected, isPersonalComplete, isAcademicComplete, isDocumentsComplete,
-        completedCount, totalSteps, progressPercent,
+        data, setTrack, setSelection, setApplicantType, prefillFromEduNovaRecord, setAccountCreated,
+        setPersonal, setEducation, setDocuments, setFeePaid, setSubmitted,
+        isPersonalComplete, isEducationComplete, isDocumentsComplete, progressPercent,
       }}
     >
       {children}

@@ -354,7 +354,6 @@ export default function UndergraduateAdmission() {
             </div>
           </>
         )}
-        {/* STEP: Created */}
         {step === "created" && (
           <div className="bg-white rounded-3xl border border-black/5 p-10 text-center">
             <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5">

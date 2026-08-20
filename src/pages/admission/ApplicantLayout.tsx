@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate, useParams, NavLink } from "react-router-dom"
 import { CheckCircle2, Circle, LogOut } from "lucide-react"
-import logo from "../assets/edunova-logo.webp"
+import logo from "../../assets/edunova-logo.webp"
 import { useApplication } from "./ApplicationContext"
 import { trackConfigs } from "./trackconfig"
 import type { Track } from "./trackconfig"

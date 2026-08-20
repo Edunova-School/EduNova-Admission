@@ -1,7 +1,7 @@
 // import { useState } from "react";
 import {Routes, Route } from "react-router-dom";
 import AdmissionPortal from "./pages/signup";
-import UndergraduateAdmission from "./pages/undergraduate";
+// import UndergraduateAdmission from "./pages/undergraduate";
 // import { ApplicationProvider } from "./pages/ApplicationContext";
 // import ApplicantLayout from "./pages/ApplicantLayout";
 // import PersonalInformation from "./pages/PersonalInformation";
@@ -15,6 +15,10 @@ import AdmissionFlow from "./pages/admission/Admissionflow"
 import ApplicantLayout from "./pages/admission/ApplicantLayout"
 import PersonalInformation from "./pages/admission/PersonalInformation"
 import EducationPage from "./pages/admission/EducationPage"
+import DocumentsPage from "./pages/admission/DocumentsPage"
+import ReviewApplication from "./pages/admission/Reviewapplication"
+import ApplicationFeePage from "./pages/admission/Applicationfeepage"
+import SubmitApplicationPage from "./pages/admission/Submitapplicationpage"
 
 function App(){
   
@@ -23,7 +27,8 @@ function App(){
       <ApplicationProvider>
   <Routes>
     <Route path="/" element={<AdmissionPortal />} />
-    <Route path="/admission/apply/undergraduate" element={<UndergraduateAdmission />} />
+    {/* <Route path="/admission/apply/undergraduate" element={<UndergraduateAdmission />} /> */}
+    <Route path="/admission/apply/:track" element={<AdmissionFlow />} />
     <Route element={<ApplicantLayout />}>
       <Route path="/admission/apply/:track/personal-information" element={<PersonalInformation />} />
       <Route path="/admission/apply/:track/education" element={<EducationPage />} />

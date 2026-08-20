@@ -1,5 +1,5 @@
 import { createContext, useContext, useState} from "react"
-import type { ReactNode } from "react"
+import type {ReactNode } from "react"
 import type { Track } from "./trackconfig"
 
 export interface PersonalInfo {
@@ -14,6 +14,9 @@ export interface PersonalInfo {
 }
 
 export interface Subject { subject: string; grade: string }
+
+// One flexible shape covering both O'Level-style and degree-style education,
+// so a single EducationPage can render the right subset per track.
 export interface EducationInfo {
   // O'Level mode (undergraduate / certificate / odl)
   schoolName: string
@@ -114,7 +117,7 @@ const mockEduNovaRecord = {
 }
 
 const applicationNumberPrefix: Record<Track, string> = {
-  undergraduate: "EDU-UG", postgraduate: "EDU-PG", certificate: "EDU-PC", odl: "EDU-OD", international: "EDU-IP",
+  undergraduate: "EDU-UG", postgraduate: "EDU-PG", certificates: "EDU-PC", odl: "EDU-OD", international: "EDU-IP",
 }
 
 const ApplicationContext = createContext<ApplicationContextValue | undefined>(undefined)

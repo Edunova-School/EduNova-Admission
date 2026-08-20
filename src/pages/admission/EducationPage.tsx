@@ -77,9 +77,8 @@ export default function EducationPage() {
   const filledSubjects = form.subjects.filter((s) => s.subject && s.grade)
 
   const canContinue = isDegreeMode
-    ? !!(form.institution && form.degree && form.graduationYear && form.classOfDegree && form.cgpa && form.transcript)
-    : !!(form.schoolName && form.examType && form.examNumber && form.examYear && filledSubjects.length >= 5)
-
+  ? !!(form.institution && form.degree && form.graduationYear && form.classOfDegree && form.cgpa)
+  : !!(form.schoolName && form.examType && form.examNumber && form.examYear && filledSubjects.length >= 5)
   const handleContinue = () => {
     if (!canContinue) return
     setEducation(isDegreeMode ? form : { ...form, subjects: filledSubjects })

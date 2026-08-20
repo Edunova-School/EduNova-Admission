@@ -1,11 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
     ChevronLeft, ChevronRight, Building2, GraduationCap, Clock, Layers, Award,
     CheckCircle2, FileText, Eye, EyeOff, Sparkles, Copy, Check, KeyRound,
     UserPlus, LogIn, UserCheck, UserPlus2,
 } from "lucide-react"
-import logo from "../assets/edunova-logo.webp"
+import logo from "../../assets/edunova-logo.webp"
 import { useApplication } from "./ApplicationContext"
 import { trackConfigs } from "./trackconfig"
 import type { Track } from "./trackconfig"
@@ -60,7 +60,10 @@ export default function AdmissionFlow() {
     const programme = department ? config.programmesByDept[department] ?? null : null
 
     // Ensure track/applicationNumber are registered in context as soon as this mounts
-    useState(() => { if (data.track !== track) setTrack(track) })
+    // Ensure track/applicationNumber are registered in context as soon as this mounts
+    useEffect(() => {
+    if (data.track !== track) setTrack(track)
+    }, [track, data.track, setTrack])
 
     const goBack = () => {
         const idx = flowOrder.indexOf(step)

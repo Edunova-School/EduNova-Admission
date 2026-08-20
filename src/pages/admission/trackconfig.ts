@@ -1,4 +1,4 @@
-export type Track = "undergraduate" | "postgraduate" | "certificate" | "odl" | "international"
+export type Track = "undergraduate" | "postgraduate" | "certificates" | "odl" | "international"
 
 export interface ProgrammeInfo {
   title: string
@@ -8,7 +8,7 @@ export interface ProgrammeInfo {
 }
 
 export interface TrackConfig {
-  label: string                 // "Undergraduate", "Postgraduate", ...
+  label: string 
   heroLabel: string              // shown in the hero eyebrow
   educationMode: "olevel" | "degree"   // which Education page section to show
   hasApplicantTypeStep: boolean  // only postgraduate asks "are you an EduNova graduate?"
@@ -90,7 +90,7 @@ export const trackConfigs: Record<Track, TrackConfig> = {
     ],
   },
 
-  certificate: {
+  certificates: {
     label: "Professional Certificate",
     heroLabel: "Professional Certificate Application",
     educationMode: "olevel",
@@ -101,8 +101,11 @@ export const trackConfigs: Record<Track, TrackConfig> = {
       "School of Business & Entrepreneurship": ["Digital Marketing", "Project Management"],
     },
     programmesByDept: {
-      "Data Analytics": { title: "Certificate in Data Analytics", duration: "6 Months", mode: "Part-Time", qualification: "Professional Certificate" },
-      "Digital Marketing": { title: "Certificate in Digital Marketing", duration: "3 Months", mode: "Part-Time", qualification: "Professional Certificate" },
+       "Data Analytics": { title: "Certificate in Data Analytics", duration: "6 Months", mode: "Part-Time", qualification: "Professional Certificate" },
+  "UI/UX Design": { title: "Certificate in UI/UX Design", duration: "4 Months", mode: "Part-Time", qualification: "Professional Certificate" },
+  "Cloud Computing": { title: "Certificate in Cloud Computing", duration: "6 Months", mode: "Part-Time", qualification: "Professional Certificate" },
+  "Digital Marketing": { title: "Certificate in Digital Marketing", duration: "3 Months", mode: "Part-Time", qualification: "Professional Certificate" },
+  "Project Management": { title: "Certificate in Project Management", duration: "4 Months", mode: "Part-Time", qualification: "Professional Certificate" },
     },
     generalRequirements: ["Minimum age of 16", "SSCE or equivalent"],
     applicationRequirements: ["Valid identification", "Passport photograph"],
@@ -135,8 +138,23 @@ export const trackConfigs: Record<Track, TrackConfig> = {
     faculties: sharedFaculties,
     departmentsByFaculty: sharedDepartmentsByFaculty,
     programmesByDept: {
-      "Computer Science": { title: "B.Sc. Computer Science (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
-    },
+    "Mechanical Engineering": { title: "B.Eng. Mechanical Engineering (International)", duration: "5 Years", mode: "Full-Time", qualification: "Bachelor of Engineering" },
+    "Civil Engineering": { title: "B.Eng. Civil Engineering (International)", duration: "5 Years", mode: "Full-Time", qualification: "Bachelor of Engineering" },
+    "Electrical & Electronics Engineering": { title: "B.Eng. Electrical & Electronics Engineering (International)", duration: "5 Years", mode: "Full-Time", qualification: "Bachelor of Engineering" },
+    "Chemical Engineering": { title: "B.Eng. Chemical Engineering (International)", duration: "5 Years", mode: "Full-Time", qualification: "Bachelor of Engineering" },
+    "Mechatronics Engineering": { title: "B.Eng. Mechatronics Engineering (International)", duration: "5 Years", mode: "Full-Time", qualification: "Bachelor of Engineering" },
+    "Computer Science": { title: "B.Sc. Computer Science (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Software Engineering": { title: "B.Sc. Software Engineering (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Artificial Intelligence": { title: "B.Sc. Artificial Intelligence (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Cybersecurity": { title: "B.Sc. Cybersecurity (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Accounting": { title: "B.Sc. Accounting (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Marketing": { title: "B.Sc. Marketing (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Business Administration": { title: "B.Sc. Business Administration (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Economics": { title: "B.Sc. Economics (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Nursing": { title: "B.NSc. Nursing Science (International)", duration: "5 Years", mode: "Full-Time", qualification: "Bachelor of Nursing Science" },
+    "Public Health": { title: "B.Sc. Public Health (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+    "Biomedical Sciences": { title: "B.Sc. Biomedical Sciences (International)", duration: "4 Years", mode: "Full-Time", qualification: "Bachelor of Science" },
+  },
     generalRequirements: ["Equivalent secondary or degree qualification", "English language proficiency where required"],
     applicationRequirements: ["Academic transcripts", "Passport", "Student visa documentation", "English proficiency result"],
   },

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState} from "react"
 import type { ReactNode } from "react"
-import type { Track } from "./trackconfig";
+import type { Track } from "./trackconfig"
 
 export interface PersonalInfo {
   dob: string
@@ -14,9 +14,6 @@ export interface PersonalInfo {
 }
 
 export interface Subject { subject: string; grade: string }
-
-// One flexible shape covering both O'Level-style and degree-style education,
-// so a single EducationPage can render the right subset per track.
 export interface EducationInfo {
   // O'Level mode (undergraduate / certificate / odl)
   schoolName: string

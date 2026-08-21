@@ -56,7 +56,6 @@ export default function PersonalInformation() {
     <div className="flex flex-col gap-6">
       <div>
         <span className="font-mono text-xs tracking-[0.2em] uppercase text-black/40">Personal Information</span>
-        <h1 className="font-serif text-2xl md:text-3xl font-semibold text-black mt-2">Tell us about yourself</h1>
         <p className="text-sm text-black/55 mt-2">This information should match your official documents.</p>
       </div>
 

@@ -19,6 +19,7 @@ import DocumentsPage from "./pages/admission/DocumentsPage"
 import ReviewApplication from "./pages/admission/Reviewapplication"
 import ApplicationFeePage from "./pages/admission/Applicationfeepage"
 import SubmitApplicationPage from "./pages/admission/Submitapplicationpage"
+import VerifyEmail from "./pages/admission/VerifyEmail";
 
 function App(){
   
@@ -27,8 +28,8 @@ function App(){
       <ApplicationProvider>
   <Routes>
     <Route path="/" element={<AdmissionPortal />} />
-    {/* <Route path="/admission/apply/undergraduate" element={<UndergraduateAdmission />} /> */}
     <Route path="/admission/apply/:track" element={<AdmissionFlow />} />
+    <Route path="/verify-email/:token" element={<VerifyEmail />} />
     <Route element={<ApplicantLayout />}>
       <Route path="/admission/apply/:track/personal-information" element={<PersonalInformation />} />
       <Route path="/admission/apply/:track/education" element={<EducationPage />} />

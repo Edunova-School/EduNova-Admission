@@ -1,3 +1,4 @@
+import { register, login, initProfile } from "../../lib/api"
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
@@ -12,10 +13,9 @@ import type { Track } from "./trackconfig"
 
 type Step =
     | "entry" | "login" | "faculty" | "department" | "programme" | "requirements"
-    | "applicantType" | "eduNovaLookup" | "account" | "created" | "dashboard"
+    | "applicantType" | "eduNovaLookup" | "account" | "verify" | "created" | "dashboard"
 
 const flowOrder: Step[] = ["entry", "faculty", "department", "programme", "requirements", "applicantType", "account", "created"]
-
 function BackButton({ onClick, label = "Back" }: { onClick: () => void; label?: string }) {
     return (
         <button onClick={onClick} className="flex items-center gap-1.5 text-sm text-black/50 hover:text-[#1E3A8A] transition-colors w-fit">
@@ -56,6 +56,10 @@ export default function AdmissionFlow() {
     const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" })
     const [loginForm, setLoginForm] = useState({ idOrEmail: "", password: "" })
     const [loginError, setLoginError] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [accountError, setAccountError] = useState("")
+    const [verifyChecking, setVerifyChecking] = useState(false)
+    const [verifyError, setVerifyError] = useState("")
 
     const programme = department ? config.programmesByDept[department] ?? null : null
 
@@ -98,21 +102,56 @@ export default function AdmissionFlow() {
         setStep("created")
     }
 
-    const handleLogin = () => {
-        if (!loginForm.idOrEmail.trim() || !loginForm.password.trim()) {
-            setLoginError("Enter your application number/email and password to continue.")
-            return
-        }
-        setLoginError("")
+    const handleLogin = async () => {
+    if (!loginForm.idOrEmail.trim() || !loginForm.password.trim()) {
+        setLoginError("Enter your application number/email and password to continue.")
+        return
+    }
+    setLoginError("")
+    setIsSubmitting(true)
+    try {
+        await login(loginForm.idOrEmail, loginForm.password)
         setStep("dashboard")
+    } catch (err) {
+        setLoginError(err instanceof Error ? err.message : "Invalid credentials. Please try again.")
+    } finally {
+        setIsSubmitting(false)
+    }
     }
 
-    const handleCreateAccount = () => {
+const handleCreateAccount = async () => {
+    setAccountError("")
+    setIsSubmitting(true)
+    try {
+        await register({
+            first_name: form.firstName,
+            last_name: form.lastName,
+            phone_number: form.phone,
+            email: form.email,
+            password: form.password,
+        })
+        await login(form.email, form.password)
         setSelection(faculty, department, programme?.title ?? "")
         setAccountCreated(`${form.firstName} ${form.lastName}`.trim(), form.email)
-        setStep("created")
+        setStep("verify")
+    } catch (err) {
+        setAccountError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+    } finally {
+        setIsSubmitting(false)
     }
-
+}
+const handleVerifyContinue = async () => {
+    setVerifyError("")
+    setVerifyChecking(true)
+    try {
+        await initProfile()
+        setStep("created")
+    } catch (err) {
+        setVerifyError("Please verify your email first — check your inbox for the link.")
+    } finally {
+        setVerifyChecking(false)
+    }
+}
     return (
         <div className="min-h-screen bg-[#F6F6F2]">
             {step !== "dashboard" && (
@@ -132,6 +171,21 @@ export default function AdmissionFlow() {
                             {step === "requirements" && programme?.title}
                             {step === "applicantType" && "Tell us about your background"}
                             {step === "eduNovaLookup" && "Welcome back, EduNova graduate"}
+                            {step === "verify" && (
+                                <div className="bg-white rounded-3xl border border-black/5 p-10 text-center">
+                                    <div className="w-16 h-16 rounded-full bg-[#1E3A8A]/10 flex items-center justify-center mx-auto mb-5">
+                                        <KeyRound size={26} strokeWidth={1.75} className="text-[#1E3A8A]" />
+                                    </div>
+                                    <h2 className="font-serif text-2xl font-semibold text-black mb-2">Check Your Email</h2>
+                                    <p className="text-sm text-black/55 mb-6 max-w-sm mx-auto">
+                                        We've sent a verification link to <span className="font-medium text-black">{form.email}</span>. Click the link to verify your account, then come back and continue.
+                                    </p>
+                                    {verifyError && <p className="text-xs text-red-500 mb-3">{verifyError}</p>}
+                                    <button disabled={verifyChecking} className="bg-[#14263F] text-white text-sm font-semibold px-8 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
+                                        {verifyChecking ? "Checking..." : "I've Verified — Continue"}
+                                    </button>
+                                </div>
+                            )}
                             {(step === "account" || step === "created") && "Create Your Application Account"}
                         </h1>
                     </div>
@@ -183,8 +237,8 @@ export default function AdmissionFlow() {
                                 </div>
                             </div>
                             {loginError && <p className="text-xs text-red-500">{loginError}</p>}
-                            <button onClick={handleLogin} className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 mt-1">
-                                <KeyRound size={16} /> Continue Application
+                            <button onClick={handleLogin} disabled={isSubmitting} className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 mt-1">
+                                <KeyRound size={16} /> {isSubmitting ? "Logging in..." : "Continue Application"}
                             </button>
                         </div>
                     </>
@@ -365,8 +419,9 @@ export default function AdmissionFlow() {
                                 </div>
                                 <input placeholder="Confirm Password" type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className="border border-black/15 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#1E3A8A]" />
                             </div>
-                            <button onClick={handleCreateAccount} disabled={!canCreateAccount} className="w-full bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40">
-                                Create Account
+                            {accountError && <p className="text-xs text-red-500 mb-3">{accountError}</p>}
+                            <button onClick={handleCreateAccount} disabled={!canCreateAccount || isSubmitting} className="w-full bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40">
+                                {isSubmitting ? "Creating account..." : "Create Account"}
                             </button>
                         </div>
                     </>

@@ -106,7 +106,6 @@ const defaultState: ApplicationState = {
   submitted: false,
 }
 
-// Mock lookup standing in for a future GET /api/students/{id} call to Flask.
 const mockEduNovaRecord = {
   fullName: "Edwin Adeyi-Samuel",
   email: "edwin@example.com",
@@ -122,9 +121,7 @@ const applicationNumberPrefix: Record<Track, string> = {
 
 const ApplicationContext = createContext<ApplicationContextValue | undefined>(undefined)
 
-// NOTE: in-memory only. Once Flask exists, each set... function should also
-// save the relevant section to something like /api/applications/{id}/{section},
-// and initial state should hydrate from a GET on mount.
+
 export function ApplicationProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ApplicationState>(defaultState)
 

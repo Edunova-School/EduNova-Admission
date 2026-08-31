@@ -1,3 +1,4 @@
+import { updateProfile } from "../../lib/api"
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowRight, User } from "lucide-react"
@@ -34,6 +35,8 @@ export default function PersonalInformation() {
   const navigate = useNavigate()
   const { data, setPersonal } = useApplication()
   const [form, setForm] = useState<PersonalInfo>(data.personal)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
 
   const availableLgas = form.state ? lgasByState[form.state] ?? [] : []
 
@@ -46,11 +49,29 @@ export default function PersonalInformation() {
 
   const canContinue = form.dob && form.gender && form.nationality && form.state && form.lga && form.address && form.phone
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!canContinue) return
-    setPersonal(form)
-    navigate(`/admission/apply/${track}/education`)
-  }
+    setSubmitError("")
+    setIsSubmitting(true)
+    try {
+        await updateProfile({
+            date_of_birth: form.dob,
+            gender: form.gender,
+            nationality: form.nationality,
+            state: form.state,
+            lga: form.lga,
+            address: form.address,
+            phone: form.phone,
+            alt_phone: form.altPhone,
+        })
+        setPersonal(form)
+        navigate(`/admission/apply/${track}/education`)
+    } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Failed to save. Please try again.")
+    } finally {
+        setIsSubmitting(false)
+    }
+}
 
   return (
     <div className="flex flex-col gap-6">
@@ -105,9 +126,10 @@ export default function PersonalInformation() {
         </div>
       </div>
 
-      <button onClick={handleContinue} disabled={!canContinue} className="self-end flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
-        Continue <ArrowRight size={16} />
-      </button>
+      {submitError && <p className="text-xs text-red-500 -mt-2">{submitError}</p>}
+<button onClick={handleContinue} disabled={!canContinue || isSubmitting} className="self-end flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
+    {isSubmitting ? "Saving..." : "Continue"} <ArrowRight size={16} />
+</button>
     </div>
   )
 }

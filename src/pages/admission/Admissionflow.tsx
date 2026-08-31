@@ -191,7 +191,6 @@ const handleVerifyContinue = async () => {
                     </div>
                 </div>
             )}
-
             <div className="px-4 md:px-8 py-8 max-w-2xl mx-auto flex flex-col gap-5">
 
                 {/* Entry */}

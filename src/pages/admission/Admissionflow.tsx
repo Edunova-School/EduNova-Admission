@@ -49,12 +49,11 @@ export default function AdmissionFlow() {
     const [faculty, setFaculty] = useState("")
     const [department, setDepartment] = useState("")
     const [showPassword, setShowPassword] = useState(false)
-    const [copied, setCopied] = useState(false)
     const [studentIdInput, setStudentIdInput] = useState("")
     const [lookupError, setLookupError] = useState("")
 
     const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" })
-    const [loginForm, setLoginForm] = useState({ idOrEmail: "", password: "" })
+    const [loginForm, setLoginForm] = useState({ LogEmail: "", password: "" })
     const [loginError, setLoginError] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [accountError, setAccountError] = useState("")
@@ -63,8 +62,6 @@ export default function AdmissionFlow() {
 
     const programme = department ? config.programmesByDept[department] ?? null : null
 
-    // Ensure track/applicationNumber are registered in context as soon as this mounts
-    // Ensure track/applicationNumber are registered in context as soon as this mounts
     useEffect(() => {
     if (data.track !== track) setTrack(track)
     }, [track, data.track, setTrack])
@@ -74,22 +71,13 @@ export default function AdmissionFlow() {
         if (idx > 0) {
             let prevStep = flowOrder[idx - 1]
             if (prevStep === "requirements" && !config.hasApplicantTypeStep) {
-                // requirements always shown for non-PG tracks; fine as-is
             }
             setStep(prevStep)
         } else {
             setStep("entry")
         }
     }
-
     const canCreateAccount = form.firstName && form.lastName && form.email && form.phone && form.password.length >= 6 && form.password === form.confirmPassword
-
-    const copyAppNumber = () => {
-        navigator.clipboard.writeText(data.applicationNumber)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }
-
     const afterProgrammeContinue = () => {
         setSelection(faculty, department, programme?.title ?? "")
         setStep(config.hasApplicantTypeStep ? "applicantType" : "requirements")
@@ -103,14 +91,14 @@ export default function AdmissionFlow() {
     }
 
     const handleLogin = async () => {
-    if (!loginForm.idOrEmail.trim() || !loginForm.password.trim()) {
+    if (!loginForm.LogEmail.trim() || !loginForm.password.trim()) {
         setLoginError("Enter your application number/email and password to continue.")
         return
     }
     setLoginError("")
     setIsSubmitting(true)
     try {
-        await login(loginForm.idOrEmail, loginForm.password)
+        await login(loginForm.LogEmail, loginForm.password)
         setStep("dashboard")
     } catch (err) {
         setLoginError(err instanceof Error ? err.message : "Invalid credentials. Please try again.")
@@ -224,7 +212,7 @@ const handleVerifyContinue = async () => {
                         <div className="bg-white rounded-2xl border border-black/5 p-7 flex flex-col gap-4">
                             <div className="flex flex-col gap-2">
                                 <label className="font-mono text-xs tracking-wide uppercase text-black/50">Application Number or Email</label>
-                                <input value={loginForm.idOrEmail} onChange={(e) => setLoginForm({ ...loginForm, idOrEmail: e.target.value })} className="border border-black/15 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#1E3A8A] transition-colors" />
+                                <input value={loginForm.LogEmail} onChange={(e) => setLoginForm({ ...loginForm, LogEmail: e.target.value })} className="border border-black/15 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#1E3A8A] transition-colors" />
                             </div>
                             <div className="flex flex-col gap-2">
                                 <label className="font-mono text-xs tracking-wide uppercase text-black/50">Password</label>
@@ -445,12 +433,6 @@ const handleVerifyContinue = async () => {
                                 <p className="text-sm text-black/55 mb-6">Your application number has been generated. Keep it safe.</p>
                             </>
                         )}
-                        <div className="flex items-center justify-center gap-2 bg-[#1E3A8A]/5 border border-[#1E3A8A]/10 rounded-xl px-5 py-3 mb-8 w-fit mx-auto">
-                            <span className="font-mono text-sm font-semibold text-[#1E3A8A]">{data.applicationNumber}</span>
-                            <button onClick={copyAppNumber} className="text-[#1E3A8A]/60 hover:text-[#1E3A8A] transition-colors">
-                                {copied ? <Check size={15} /> : <Copy size={15} />}
-                            </button>
-                        </div>
                         <button onClick={() => setStep("dashboard")} className="bg-[#14263F] text-white text-sm font-semibold px-8 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-300">
                             Go to Applicant Dashboard
                         </button>

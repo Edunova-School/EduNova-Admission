@@ -115,9 +115,7 @@ const mockEduNovaRecord = {
   cgpa: "4.32",
 }
 
-const applicationNumberPrefix: Record<Track, string> = {
-  undergraduate: "EDU-UG", postgraduate: "EDU-PG", certificates: "EDU-PC", odl: "EDU-OD", international: "EDU-IP",
-}
+
 
 const ApplicationContext = createContext<ApplicationContextValue | undefined>(undefined)
 
@@ -126,11 +124,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ApplicationState>(defaultState)
 
   const setTrack = (track: Track) =>
-    setData((prev) => ({
-      ...prev,
-      track,
-      applicationNumber: prev.applicationNumber || `${applicationNumberPrefix[track]}-2026-${Math.floor(Math.random() * 900000 + 100000)}`,
-    }))
+    setData((prev) => ({ ...prev, track }))
 
   const setSelection = (faculty: string, department: string, programmeTitle: string) =>
     setData((prev) => ({ ...prev, faculty, department, programmeTitle }))
@@ -144,7 +138,6 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
       applicantName: mockEduNovaRecord.fullName,
       applicantEmail: mockEduNovaRecord.email,
       accountCreated: true,
-      applicantId: prev.applicantId || "EDU-APP-001245",
       education: {
         ...prev.education,
         institution: "EduNova University",
@@ -156,7 +149,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
     }))
 
   const setAccountCreated = (name: string, email: string) =>
-    setData((prev) => ({ ...prev, accountCreated: true, applicantId: prev.applicantId || "EDU-APP-001245", applicantName: name, applicantEmail: email }))
+    setData((prev) => ({ ...prev, accountCreated: true, applicantName: name, applicantEmail: email }))
 
   const setPersonal = (info: PersonalInfo) => setData((prev) => ({ ...prev, personal: info }))
   const setEducation = (info: EducationInfo) => setData((prev) => ({ ...prev, education: info }))

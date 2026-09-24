@@ -26,12 +26,31 @@ async function apiFetch(path: string, options: ApiOptions = {}) {
   let data: any = null
   try { data = await res.json() } catch { }
 
-  if (!res.ok) throw new Error(data?.message || data?.error || `Request failed (${res.status})`)
+  if (!res.ok) {
+  console.error("API ERROR RESPONSE:", data)
+  throw new Error(
+    data?.message ||
+    data?.error ||
+    JSON.stringify(data) ||
+    `Request failed (${res.status})`
+  )
+}
   return data
 }
 
-export function register(payload: { first_name: string; last_name: string; phone_number: string; email: string; password: string }) {
-  return apiFetch("/auth/register", { method: "POST", body: JSON.stringify(payload), auth: false })
+export function register(payload: {
+  first_name: string
+  last_name: string
+  phone_number: string
+  email: string
+  password: string
+  programme_name: string
+}) {
+  return apiFetch("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    auth: false
+  })
 }
 
 export async function login(email: string, password: string) {
@@ -44,8 +63,15 @@ export function logout() {
   return apiFetch("/auth/logout", { method: "POST" }).finally(clearToken)
 }
 
-export function verifyEmail(token: string) {
-  return apiFetch(`/auth/verify-email/${token}`, { method: "GET", auth: false })
+export function verifyEmail(email: string, otp: string) {
+  return apiFetch("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      otp,
+    }),
+    auth: false,
+  })
 }
 
 // ---- Applicant profile ----
@@ -62,8 +88,30 @@ export async function uploadDocument(file: File, documentType: string) {
 }
 
 // ---- Applications ----
-export const createApplication = (programmeId: string, academicSessionId: string) =>
-  apiFetch("/admission/applications", { method: "POST", body: JSON.stringify({ programme_id: programmeId, academic_session_id: academicSessionId }) })
+export const createApplication = (programmeName: string) =>
+  apiFetch("/admission/applications", {
+    method: "POST",
+    body: JSON.stringify({
+      programme_name: programmeName,
+    }),
+  })
+  export const getInvoices = () =>
+  apiFetch("/finance/invoices", {
+    method: "GET",
+  })
+
+export const initializeInvoicePayment = (invoiceId: string) =>
+  apiFetch(`/finance/invoices/${invoiceId}/initialize`, {
+    method: "POST",
+    body: JSON.stringify({
+      payment_gateway: "paystack",
+    }),
+  })
+
+export const verifyPayment = (reference: string) =>
+  apiFetch(`/finance/transactions/${reference}/verify`, {
+    method: "POST",
+  })
 export const getApplications = () => apiFetch("/admission/applications", { method: "GET" })
 export const submitApplication = (applicationId: string) => apiFetch(`/admission/applications/${applicationId}/submit`, { method: "POST" })
 export const acceptAdmission = (applicationId: string) => apiFetch(`/admission/applications/${applicationId}/accept`, { method: "POST" })

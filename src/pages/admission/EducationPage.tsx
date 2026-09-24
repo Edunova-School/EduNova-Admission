@@ -1,3 +1,4 @@
+import { updateProfile } from "../../lib/api"
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowRight, ArrowLeft, BookOpen, GraduationCap, Plus, Trash2, CheckCircle2, Lock } from "lucide-react"
@@ -79,11 +80,39 @@ export default function EducationPage() {
   const canContinue = isDegreeMode
   ? !!(form.institution && form.degree && form.graduationYear && form.classOfDegree && form.cgpa)
   : !!(form.schoolName && form.examType && form.examNumber && form.examYear && filledSubjects.length >= 5)
-  const handleContinue = () => {
-    if (!canContinue) return
-    setEducation(isDegreeMode ? form : { ...form, subjects: filledSubjects })
+  const handleContinue = async () => {
+  if (!canContinue) return
+
+  try {
+    if (isDegreeMode) {
+      await updateProfile({
+        secondary_school_attended: form.institution,
+        exam_type: form.degree,
+        exam_number: form.graduationYear,
+        exam_year: form.classOfDegree,
+        jamb_score: form.cgpa,
+      })
+    } else {
+      await updateProfile({
+        secondary_school_attended: form.schoolName,
+        exam_type: form.examType,
+        exam_number: form.examNumber,
+        exam_year: form.examYear,
+        jamb_registration_number: form.jambNumber,
+        jamb_score: form.jambScore,
+        olevel_results: filledSubjects,
+      })
+    }
+
+    setEducation(
+      isDegreeMode ? form : { ...form, subjects: filledSubjects }
+    )
+
     navigate(`${base}/documents`)
+  } catch (err) {
+    console.error("EDUCATION SAVE ERROR:", err)
   }
+}
 
   return (
     <div className="flex flex-col gap-6">

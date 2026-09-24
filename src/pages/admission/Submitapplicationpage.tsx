@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { CheckCircle2, ArrowLeft, Clock, Sparkles } from "lucide-react"
 import { useApplication } from "./ApplicationContext"
+import { submitApplication } from "../../lib/api"
 import { trackConfigs } from "./trackconfig"
 import type { Track } from "./trackconfig"
 
@@ -12,14 +13,28 @@ export default function SubmitApplicationPage() {
   const base = `/admission/apply/${track}`
 
   const navigate = useNavigate()
-  const { data, setSubmitted } = useApplication()
+  const { data, setSubmitted, isProfileLoading } = useApplication()
   const [confirmed, setConfirmed] = useState(false)
 
-  const handleSubmit = () => {
-    if (!confirmed) return
-    setSubmitted(true)
-  }
+const handleSubmit = async () => {
+  if (!confirmed || !data.applicationId) return
 
+  console.log("SUBMITTING APPLICATION:", {
+    id: data.applicationId,
+    applicationNumber: data.applicationNumber,
+    submitted: data.submitted,
+  })
+
+  try {
+    await submitApplication(data.applicationId)
+    setSubmitted(true)
+  } catch (error) {
+    console.error("SUBMIT APPLICATION ERROR:", error)
+  }
+}
+  if (isProfileLoading) {
+  return null
+}
   if (data.submitted) {
     return (
       <div className="flex flex-col items-center text-center gap-6 py-8">

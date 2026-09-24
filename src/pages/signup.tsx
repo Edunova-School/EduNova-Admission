@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { GraduationCap, BookOpen, Award, Laptop, Globe, ArrowRight, Sparkles, KeyRound,} from "lucide-react"
+
+import { GraduationCap, BookOpen, Award, Laptop, Globe, ArrowRight, Sparkles} from "lucide-react"
 import logo from "../assets/edunova-logo.webp"
 const programmeTypes = [
   {
@@ -40,10 +40,6 @@ const programmeTypes = [
 ]
 
 export default function AdmissionPortal() {
-  const [showContinue, setShowContinue] = useState(false)
-  const [appNumber, setAppNumber] = useState("")
-  const [password, setPassword] = useState("")
-
   return (
     <div className="min-h-screen bg-[#F6F6F2]">
       <div className="relative bg-gradient-to-br from-[#0B1524] via-[#14263F] to-[#1E3A8A] overflow-hidden">
@@ -71,7 +67,15 @@ export default function AdmissionPortal() {
             const Icon = type.icon
             const isLast = index === programmeTypes.length - 1 && programmeTypes.length % 2 !== 0
             return (
-              <a key={index} href={type.path} className={`group relative bg-white rounded-3xl border border-black/5 p-7 overflow-hidden transition-all duration-300 hover:border-transparent hover:shadow-xl ${isLast ? "sm:col-span-2 sm:max-w-md sm:mx-auto sm:w-full" : ""}`}>
+             <a
+  key={index}
+  href={type.path}
+  className={`group relative bg-white p-3 rounded-3xl border border-black/5 p-7 overflow-hidden transition-all duration-300 hover:border-transparent hover:shadow-xl ${
+    isLast
+      ? "sm:col-span-2 sm:max-w-md sm:mx-auto sm:w-full"
+      : ""
+  }`}
+>
                 <span className="absolute inset-0 bg-gradient-to-br from-[#14263F] to-[#1E3A8A] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative">
                   <div className="w-14 h-14 rounded-2xl bg-[#1E3A8A]/8 group-hover:bg-white/10 flex items-center justify-center mb-5 transition-colors duration-300">
@@ -89,7 +93,7 @@ export default function AdmissionPortal() {
             )
           })}
         </div>
-        <div className="mt-12 flex flex-col items-center text-center">
+        {/* <div className="mt-12 flex flex-col items-center text-center">
           <p className="text-sm text-black/55 mb-3">Already started an application?</p>
           {!showContinue ? (
             <button onClick={() => setShowContinue(true)} className="inline-flex items-center gap-2 text-sm font-semibold text-[#1E3A8A] border border-[#1E3A8A]/20 px-6 py-3 rounded-xl hover:bg-[#1E3A8A]/5 transition-colors duration-200">
@@ -118,7 +122,7 @@ export default function AdmissionPortal() {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   )

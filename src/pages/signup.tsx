@@ -1,6 +1,8 @@
 
 import { GraduationCap, BookOpen, Award, Laptop, Globe, ArrowRight, Sparkles} from "lucide-react"
+import { Link } from "react-router-dom"
 import logo from "../assets/edunova-logo.webp"
+import { useState, useEffect } from "react"
 const programmeTypes = [
   {
     icon: GraduationCap,
@@ -40,8 +42,54 @@ const programmeTypes = [
 ]
 
 export default function AdmissionPortal() {
-  return (
-    <div className="min-h-screen bg-[#F6F6F2]">
+  const [sessionMessage, setSessionMessage] = useState("")
+useEffect(() => {
+
+  const shouldShow = sessionStorage.getItem("show_session_message")
+
+  if (shouldShow === "true") {
+
+    const message = sessionStorage.getItem("session_expired")
+
+    if (message) {
+      setSessionMessage(message)
+    }
+
+    sessionStorage.removeItem("show_session_message")
+    sessionStorage.removeItem("session_expired")
+  }
+
+}, [])
+
+return ( 
+  <div className="min-h-screen bg-[#F6F6F2]">
+
+    {sessionMessage && (
+  <div className="mx-auto mt-6 max-w-md bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+    <div className="flex justify-between items-start gap-4">
+      <div>
+        <p className="font-semibold">
+          Session expired
+        </p>
+
+        <p className="mt-1">
+          {sessionMessage}
+        </p>
+      </div>
+
+      <button
+        onClick={() => {
+          setSessionMessage("")
+          sessionStorage.removeItem("session_expired")
+        }}
+        className="text-red-500 hover:text-red-700"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
+
       <div className="relative bg-gradient-to-br from-[#0B1524] via-[#14263F] to-[#1E3A8A] overflow-hidden">
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B8901F]/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
@@ -67,10 +115,10 @@ export default function AdmissionPortal() {
             const Icon = type.icon
             const isLast = index === programmeTypes.length - 1 && programmeTypes.length % 2 !== 0
             return (
-             <a
+             <Link
+  to={type.path}
   key={index}
-  href={type.path}
-  className={`group relative bg-white p-3 rounded-3xl border border-black/5 p-7 overflow-hidden transition-all duration-300 hover:border-transparent hover:shadow-xl ${
+className={`group relative bg-white p-3 rounded-3xl border border-black/5 p-7 overflow-hidden transition-all duration-300 hover:border-transparent hover:shadow-xl ${
     isLast
       ? "sm:col-span-2 sm:max-w-md sm:mx-auto sm:w-full"
       : ""
@@ -89,7 +137,7 @@ export default function AdmissionPortal() {
                     <ArrowRight size={16} strokeWidth={2.5} />
                   </span>
                 </div>
-              </a>
+              </Link>
             )
           })}
         </div>

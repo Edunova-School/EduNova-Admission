@@ -2,11 +2,13 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api
 const TOKEN_KEY = "edunova_token"
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY)
-export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token)
+export const setToken = (token: string) => {
+  localStorage.setItem(TOKEN_KEY, token)
+}
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY)
 
 interface ApiOptions extends RequestInit {
-  auth?: boolean // attach Bearer token — default true
+  auth?: boolean 
 }
 
 async function apiFetch(path: string, options: ApiOptions = {}) {
@@ -25,13 +27,49 @@ async function apiFetch(path: string, options: ApiOptions = {}) {
 
   let data: any = null
   try { data = await res.json() } catch { }
+  
+console.log("API ERROR RESPONSE:", res.status, data)
+if (!res.ok) {
 
-  if (!res.ok) {
-  console.error("API ERROR RESPONSE:", data)
+  const isTokenExpired =
+    res.status === 401 &&
+    (
+      data?.msg === "Token has expired" ||
+      data?.message === "Token has expired" ||
+      data?.error === "Token has expired"
+    )
+
+  const isUnauthorized =
+    res.status === 401 &&
+    (
+      data?.msg === "Missing Authorization Header" ||
+      data?.message === "Missing Authorization Header"
+    )
+
+
+  if (isTokenExpired) {
+    clearToken()
+    sessionStorage.setItem(
+      "session_expired",
+      "Your session has expired. Please login again to continue."
+    )
+    sessionStorage.setItem("show_session_message", "true")
+
+    if (window.location.pathname !== "/") {
+      window.location.replace("/")
+    }
+    throw new Error("Session expired")
+  }
+
+  if (isUnauthorized) {
+    clearToken()
+    throw new Error("Not authenticated")
+  }
+
   throw new Error(
     data?.message ||
     data?.error ||
-    JSON.stringify(data) ||
+    data?.msg ||
     `Request failed (${res.status})`
   )
 }
@@ -54,8 +92,26 @@ export function register(payload: {
 }
 
 export async function login(email: string, password: string) {
-  const data = await apiFetch("/auth/login", { method: "POST", body: JSON.stringify({ email, password }), auth: false })
-  if (data?.data?.access_token) setToken(data.data.access_token)
+  const data = await apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+    auth: false
+  })
+
+
+  const token =
+    data?.data?.access_token ||
+    data?.access_token ||
+    data?.data?.token ||
+    data?.token
+
+  if (token) {
+    setToken(token)
+    
+  } else {
+    
+  }
+
   return data
 }
 

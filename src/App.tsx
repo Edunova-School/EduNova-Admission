@@ -1,5 +1,5 @@
-// import { useState } from "react";
-import {Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import AdmissionPortal from "./pages/signup";
 // import UndergraduateAdmission from "./pages/undergraduate";
 // import { ApplicationProvider } from "./pages/ApplicationContext";
@@ -22,7 +22,33 @@ import SubmitApplicationPage from "./pages/admission/Submitapplicationpage"
 import VerifyEmail from "./pages/admission/VerifyEmail";
 
 function App(){
-  
+  const navigate = useNavigate()
+
+  useEffect(() => {
+
+    const handleExpired = () => {
+  localStorage.removeItem("edunova_token")
+  localStorage.removeItem("application_data")
+
+  alert("Your session has expired. Please login again.")
+  navigate("/")
+}
+
+    window.addEventListener(
+      "auth-expired",
+      handleExpired
+    )
+
+    return () => {
+      window.removeEventListener(
+        "auth-expired",
+        handleExpired
+      )
+    }
+
+  }, [navigate])
+
+
  return (
     <div>
       <ApplicationProvider>

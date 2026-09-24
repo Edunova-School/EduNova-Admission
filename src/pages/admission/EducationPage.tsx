@@ -30,14 +30,32 @@ function Field({ label, children, verified }: { label: string; children: React.R
   )
 }
 
-function SubjectSelect({ value, onChange, usedSubjects }: { value: string; onChange: (v: string) => void; usedSubjects: string[] }) {
+function SubjectSelect({ 
+  value, 
+  onChange, 
+  usedSubjects,
+  locked
+}: { 
+  value: string
+  onChange: (v: string) => void
+  usedSubjects: string[]
+  locked?: boolean
+}) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} flex-1`}>
+    <select 
+  value={value} 
+  onChange={(e) => onChange(e.target.value)} 
+  disabled={locked}
+  className={`${inputClass} flex-1 ${locked ? "bg-black/[0.03] cursor-not-allowed" : ""}`}
+>
       <option value="">Select subject</option>
       {subjectCategories.map((cat) => (
         <optgroup key={cat.group} label={cat.group}>
           {cat.subjects.map((s) => (
-            <option key={s} value={s} disabled={usedSubjects.includes(s) && s !== value}>{s}</option>
+            <option key={s} value={s} disabled={
+  (s === "English Language" || s === "Mathematics") ||
+  (usedSubjects.includes(s) && s !== value)
+}>{s}</option>
           ))}
         </optgroup>
       ))}
@@ -55,6 +73,7 @@ export default function EducationPage() {
   const { data, setEducation } = useApplication()
   const isDegreeMode = config.educationMode === "degree"
   const isLockedGraduate = data.isEduNovaGraduate
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const [form, setForm] = useState<EducationInfo>(
     !isDegreeMode && data.education.subjects.length === 0
@@ -73,15 +92,86 @@ export default function EducationPage() {
     setForm({ ...form, subjects: next })
   }
   const addSubject = () => setForm({ ...form, subjects: [...form.subjects, { subject: "", grade: "" }] })
-  const removeSubject = (i: number) => setForm({ ...form, subjects: form.subjects.filter((_, idx) => idx !== i) })
+  const removeSubject = (i: number) => {
+  const subject = form.subjects[i].subject
+
+  if (subject === "English Language" || subject === "Mathematics") {
+    return
+  }
+
+  setForm({
+    ...form,
+    subjects: form.subjects.filter((_, idx) => idx !== i)
+  })
+}
   const usedSubjects = form.subjects.map((s) => s.subject).filter(Boolean)
   const filledSubjects = form.subjects.filter((s) => s.subject && s.grade)
 
-  const canContinue = isDegreeMode
-  ? !!(form.institution && form.degree && form.graduationYear && form.classOfDegree && form.cgpa)
-  : !!(form.schoolName && form.examType && form.examNumber && form.examYear && filledSubjects.length >= 5)
-  const handleContinue = async () => {
-  if (!canContinue) return
+ const handleContinue = async () => {
+
+  const newErrors: Record<string,string> = {}
+
+  if (!/^\d{10}$/.test(form.examNumber)) {
+    newErrors.examNumber = "Exam number must be exactly 10 digits."
+  }
+
+
+  if (form.jambNumber && !/^\d{10}$/.test(form.jambNumber)) {
+    newErrors.jambNumber = "JAMB registration number must be exactly 10 digits."
+  }
+ if (!form.schoolName) {
+  newErrors.schoolName = "Secondary school name is required."
+}
+
+if (!form.examType) {
+  newErrors.examType = "Exam type is required."
+}
+
+if (!form.examNumber) {
+  newErrors.examNumber = "Exam number is required."
+}
+
+if (!form.examYear) {
+  newErrors.examYear = "Exam year is required."
+}
+
+if (filledSubjects.length < 5) {
+  newErrors.subjects = "You must enter at least 5 subjects with grades."
+}
+
+  if (form.jambScore !== "") {
+    const score = Number(form.jambScore)
+
+    if (score < 0 || score > 400) {
+      newErrors.jambScore = "JAMB score must be between 0 and 400."
+    }
+  }
+
+
+  const compulsorySubjects = form.subjects.some(
+    s => s.subject === "English Language" && s.grade
+  )
+
+  const compulsoryMath = form.subjects.some(
+    s => s.subject === "Mathematics" && s.grade
+  )
+
+
+  if (!compulsorySubjects) {
+    newErrors.subjects = "English Language is compulsory."
+  }
+
+  if (!compulsoryMath) {
+    newErrors.subjects = "Mathematics is compulsory."
+  }
+
+
+  setErrors(newErrors)
+
+
+  if(Object.keys(newErrors).length > 0){
+    return
+  }
 
   try {
     if (isDegreeMode) {
@@ -110,8 +200,12 @@ export default function EducationPage() {
 
     navigate(`${base}/documents`)
   } catch (err) {
-    console.error("EDUCATION SAVE ERROR:", err)
-  }
+  setErrors({
+    submit: err instanceof Error 
+      ? err.message 
+      : "Something went wrong. Please try again."
+  })
+}
 }
 
   return (
@@ -182,7 +276,20 @@ export default function EducationPage() {
               <div className="w-8 h-8 rounded-full bg-[#1E3A8A]/10 flex items-center justify-center"><BookOpen size={16} strokeWidth={1.75} className="text-[#1E3A8A]" /></div>
               <p className="font-mono text-xs tracking-widest uppercase text-[#B8901F]">Examination Details</p>
             </div>
-            <Field label="Secondary School Attended"><input name="schoolName" value={form.schoolName} onChange={handleChange} className={inputClass} /></Field>
+            <Field label="Secondary School Attended">
+<input 
+name="schoolName" 
+value={form.schoolName} 
+onChange={handleChange} 
+className={inputClass}
+/>
+
+{errors.schoolName && (
+<p className="text-xs text-red-500">
+{errors.schoolName}
+</p>
+)}
+</Field>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <Field label="Exam Type">
                 <select name="examType" value={form.examType} onChange={handleChange} className={inputClass}>
@@ -192,12 +299,49 @@ export default function EducationPage() {
                   <option value="NABTEB">NABTEB</option>
                 </select>
               </Field>
-              <Field label="Exam Number"><input name="examNumber" value={form.examNumber} onChange={handleChange} className={inputClass} /></Field>
+              <Field label="Exam Number">
+<input 
+name="examNumber" 
+value={form.examNumber} 
+onChange={handleChange} 
+className={inputClass}
+maxLength={10}
+/>
+
+{errors.examNumber && (
+<p className="text-xs text-red-500">
+{errors.examNumber}
+</p>
+)}
+
+</Field>
               <Field label="Exam Year"><input name="examYear" value={form.examYear} onChange={handleChange} placeholder="2025" className={inputClass} /></Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="JAMB Registration Number"><input name="jambNumber" value={form.jambNumber} onChange={handleChange} className={inputClass} /></Field>
-              <Field label="JAMB Score"><input name="jambScore" value={form.jambScore} onChange={handleChange} className={inputClass} /></Field>
+              <div>
+                <Field label="JAMB Registration Number"><input name="jambNumber" maxLength={10} value={form.jambNumber} onChange={handleChange} className={inputClass} /></Field>
+                {errors.jambNumber && (
+<p className="text-xs text-red-500">
+{errors.jambNumber}
+</p>
+)}
+              </div>
+              <div>
+                <Field label="JAMB Score"><input
+name="jambScore"
+type="number"
+min="0"
+max="400"
+value={form.jambScore}
+onChange={handleChange}
+className={inputClass}
+/></Field>
+                {errors.jambScore && (
+<p className="text-xs text-red-500">
+{errors.jambScore}
+</p>
+)}
+              </div>
             </div>
           </div>
 
@@ -208,16 +352,40 @@ export default function EducationPage() {
                 {filledSubjects.length} of {form.subjects.length} filled
               </span>
             </div>
-            <p className="text-xs text-black/40 mb-5">Choose from Core, Science, Arts, or Commercial subjects.</p>
+            <div>
+              <p className="text-xs text-black/40 mb-5">Choose from Core, Science, Arts, or Commercial subjects.</p>
+              {errors.subjects && (
+<p className="text-xs text-red-500 mb-3">
+{errors.subjects}
+</p>
+)}
+            </div>
             <div className="flex flex-col gap-3">
               {form.subjects.map((s, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <SubjectSelect value={s.subject} onChange={(v) => updateSubject(i, "subject", v)} usedSubjects={usedSubjects} />
+                  <SubjectSelect 
+  value={s.subject}
+  onChange={(v) => updateSubject(i, "subject", v)}
+  usedSubjects={usedSubjects}
+  locked={
+    s.subject === "English Language" ||
+    s.subject === "Mathematics"
+  }
+/>
                   <select value={s.grade} onChange={(e) => updateSubject(i, "grade", e.target.value)} className={`${inputClass} w-24 flex-shrink-0`}>
                     <option value="">Grade</option>
                     {gradeOptions.map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
-                  <button type="button" onClick={() => removeSubject(i)} disabled={form.subjects.length <= 5} className="p-2 text-black/30 hover:text-red-500 disabled:opacity-20 disabled:cursor-not-allowed transition-colors flex-shrink-0">
+                  {errors.submit && (
+  <p className="text-sm text-red-500">
+    {errors.submit}
+  </p>
+)}
+                  <button type="button" onClick={() => removeSubject(i)} disabled={
+  form.subjects.length <= 5 ||
+  s.subject === "English Language" ||
+  s.subject === "Mathematics"
+} className="p-2 text-black/30 hover:text-red-500 disabled:opacity-20 disabled:cursor-not-allowed transition-colors flex-shrink-0">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -234,7 +402,7 @@ export default function EducationPage() {
         <button onClick={() => navigate(`${base}/personal-information`)} className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors">
           <ArrowLeft size={16} /> Back
         </button>
-        <button onClick={handleContinue} disabled={!canContinue} className="flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
+        <button onClick={handleContinue} className="flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
           Continue <ArrowRight size={16} />
         </button>
       </div>

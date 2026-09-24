@@ -14,7 +14,6 @@ import type { Track } from "./trackconfig"
 import {
   getInvoices,
   initializeInvoicePayment,
-  verifyPayment,
 } from "../../lib/api"
 const naira = (n: number) => `₦${n.toLocaleString()}`
 
@@ -100,15 +99,8 @@ const handlePay = async () => {
       throw new Error("Payment reference was not returned.")
     }
 
-    // 2. Verify payment
-const verifyResponse = await verifyPayment(payment.reference)
-
-console.log("PAYMENT VERIFICATION RESPONSE:", verifyResponse)
-
-// 3. Fetch the invoice again to confirm the backend marked it as PAID
 const invoiceResponse = await getInvoices()
 
-console.log("INVOICES AFTER PAYMENT:", invoiceResponse)
 
 const invoices = invoiceResponse?.data ?? []
 

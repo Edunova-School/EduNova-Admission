@@ -266,10 +266,6 @@ export default function DocumentsPage() {
                 primaryResult: file.name,
               }))
             } catch (error) {
-              console.error(
-                "UPLOAD ERROR:",
-                error
-              )
             } finally {
               setUploading((prev) => ({
                 ...prev,
@@ -318,10 +314,6 @@ export default function DocumentsPage() {
                 passportPhoto: file.name,
               }))
             } catch (error) {
-              console.error(
-                "PASSPORT UPLOAD ERROR:",
-                error
-              )
             } finally {
               setUploading((prev) => ({
                 ...prev,
@@ -370,10 +362,6 @@ export default function DocumentsPage() {
                 idDocument: file.name,
               }))
             } catch (error) {
-              console.error(
-                "BIRTH CERTIFICATE UPLOAD ERROR:",
-                error
-              )
             } finally {
               setUploading((prev) => ({
                 ...prev,
@@ -422,10 +410,6 @@ export default function DocumentsPage() {
                 supporting: file.name,
               }))
             } catch (error) {
-              console.error(
-                "JAMB RESULT UPLOAD ERROR:",
-                error
-              )
             } finally {
               setUploading((prev) => ({
                 ...prev,

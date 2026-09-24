@@ -68,7 +68,14 @@ export default function PersonalInformation() {
   const availableLgas = form.state_of_origin
   ? lgasByState[form.state_of_origin] ?? []
   : []
-
+const today = new Date()
+const maxDateOfBirth = new Date(
+  today.getFullYear() - 15,
+  today.getMonth(),
+  today.getDate()
+)
+  .toISOString()
+  .split("T")[0]
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -83,32 +90,67 @@ export default function PersonalInformation() {
   const canContinue =
   form.date_of_birth &&
   form.gender &&
-  form.nationality &&
   form.state_of_origin &&
   form.lga_of_origin &&
   form.address
 
-  const handleContinue = async () => {
-    if (!canContinue) return
-    setSubmitError("")
-    setIsSubmitting(true)
-    try {
-        await updateProfile({
-  date_of_birth: form.date_of_birth,
-  gender: form.gender,
-  nationality: form.nationality,
-  state_of_origin: form.state_of_origin,
-  lga_of_origin: form.lga_of_origin,
-  address: form.address,
-  alternate_phone_number: form.alternate_phone_number,
-})
-        setPersonal(form)
-        navigate(`/admission/apply/${track}/education`)
-    } catch (err) {
-        setSubmitError(err instanceof Error ? err.message : "Failed to save. Please try again.")
-    } finally {
-        setIsSubmitting(false)
-    }
+const handleContinue = async () => {
+  if (!canContinue) return
+
+  setSubmitError("")
+
+  // Age validation
+  const birthDate = new Date(form.date_of_birth)
+  const today = new Date()
+
+  let age = today.getFullYear() - birthDate.getFullYear()
+
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--
+  }
+
+  if (age < 15) {
+    setSubmitError("Applicant must be at least 15 years old.")
+    return
+  }
+
+  setIsSubmitting(true)
+
+  try {
+    await updateProfile({
+      date_of_birth: form.date_of_birth,
+      gender: form.gender,
+      nationality: "Nigerian",
+      state_of_origin: form.state_of_origin,
+      lga_of_origin: form.lga_of_origin,
+      address: form.address,
+      alternate_phone_number: form.alternate_phone_number,
+    })
+
+    setPersonal({
+      ...form,
+      nationality: "Nigerian",
+    })
+
+    navigate(`/admission/apply/${track}/education`)
+
+  } catch (err) {
+    console.error("PROFILE UPDATE ERROR:", err)
+
+    setSubmitError(
+      err instanceof Error
+        ? err.message
+        : "Something went wrong. Please try again."
+    )
+
+  } finally {
+    setIsSubmitting(false)
+  }
 }
 
   return (
@@ -129,12 +171,13 @@ export default function PersonalInformation() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Field label="Date of Birth">
   <input
-    type="date"
-    name="date_of_birth"
-    value={form.date_of_birth}
-    onChange={handleChange}
-    className={inputClass}
-  />
+  type="date"
+  name="date_of_birth"
+  value={form.date_of_birth}
+  onChange={handleChange}
+  max={maxDateOfBirth}
+  className={inputClass}
+/>
 </Field>
           <Field label="Gender">
             <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
@@ -146,9 +189,16 @@ export default function PersonalInformation() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Field label="Nationality"><input name="nationality" value={form.nationality} onChange={handleChange} placeholder="Nigerian" className={inputClass} /></Field>
+          <Field label="Nationality">
+  <input
+    name="nationality"
+    value="Nigerian"
+    readOnly
+    className={`${inputClass} bg-black/[0.02] cursor-not-allowed`}
+  />
+</Field>
           <Field label="State of Origin">
-            <select name="state" value={form.state_of_origin } onChange={handleStateChange} className={inputClass}>
+            <select name="state_of_origin" value={form.state_of_origin } onChange={handleStateChange} className={inputClass}>
               <option value="">Select...</option>
               {nigerianStates.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -167,9 +217,9 @@ export default function PersonalInformation() {
       {form.state_of_origin ? "Select..." : "Select a state first"}
     </option>
 
-    {availableLgas.map((l) => (
-      <option key={l} value={l}>
-        {l}
+    {availableLgas.map((lga) => (
+      <option key={lga} value={lga}>
+        {lga}
       </option>
     ))}
   </select>

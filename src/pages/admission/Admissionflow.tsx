@@ -1,4 +1,4 @@
-    import { register, login,logout, getToken, verifyEmail  } from "../../lib/api"
+    import { register, login,logout, verifyEmail  } from "../../lib/api"
     import { useState, useEffect } from "react"
     import { useNavigate, useParams } from "react-router-dom"
     import {
@@ -163,11 +163,6 @@
         const [otp, setOtp] = useState("")
     const [verifyError, setVerifyError] = useState("")
         const programme = department ? config.programmesByDept[department] ?? null : null
-        console.log("TRACK:", track)
-    console.log("DEPARTMENT:", department)
-    console.log("CONFIG PROGRAMME:", config.programmesByDept[department])
-    console.log("TOKEN ON ADMISSION FLOW MOUNT:", getToken())
-    
 useEffect(() => {
     const authenticated = sessionStorage.getItem(
         "edunova_authenticated"
@@ -198,11 +193,6 @@ useEffect(() => {
                 await refreshProfile()
                 setStep("dashboard")
             } catch (error) {
-                console.error(
-                    "Failed to restore session:",
-                    error
-                )
-
                 sessionStorage.removeItem(
                     "edunova_authenticated"
                 )
@@ -273,15 +263,10 @@ useEffect(() => {
         }
 
     const handleCreateAccount = async () => {
-    console.log("CREATE ACCOUNT CLICKED")
-
     setAccountError("")
     setIsSubmitting(true)
 
     try {
-        console.log("BEFORE REGISTER")
-    console.log("PROGRAMME OBJECT:", programme)
-    console.log("PROGRAMME TITLE BEING SENT:", programme?.title)
     await register({
     first_name: form.firstName,
     last_name: form.lastName,
@@ -290,18 +275,9 @@ useEffect(() => {
     password: form.password,
     programme_name: programme?.title ?? "",
     });
-
-    console.log("REGISTER SUCCESS");
-
     await login(form.email, form.password);
-
     sessionStorage.setItem("edunova_pending_verification", "true");
     sessionStorage.setItem("edunova_pending_email", form.email);
-
-    console.log("LOGIN SUCCESS");
-        console.log("SELECTED PROGRAMME:", programme)
-        console.log("PROGRAMME NAME:", programme?.title)
-
         setSelection(faculty, department, programme?.title ?? "")
         setAccountCreated(
         `${form.firstName} ${form.lastName}`.trim(),
@@ -309,9 +285,6 @@ useEffect(() => {
         )
         setStep("verify")
     } catch (err) {
-    console.error("CREATE ACCOUNT ERROR:", err)
-    console.error("REGISTER ERROR OBJECT:", err)
-
     setAccountError(
         err instanceof Error
         ? err.message
@@ -336,8 +309,6 @@ useEffect(() => {
 
         setStep("created")
     } catch (err) {
-        console.error("VERIFY OTP ERROR:", err)
-
         setVerifyError(
         err instanceof Error
             ? err.message
@@ -871,7 +842,6 @@ useEffect(() => {
                 try {
                 await logout()
                 } catch (error) {
-                console.error("Logout failed:", error)
                 } finally {
                 sessionStorage.removeItem("edunova_authenticated")
                 resetApplication()

@@ -1,4 +1,4 @@
-import { getInvoices, getProfile, getApplications } from "../../lib/api"
+import { getInvoices, getProfile, getApplications, getToken } from "../../lib/api"
 import { createContext, useContext, useState, useEffect } from "react"
 import type {ReactNode } from "react"
 import type { Track } from "./trackconfig"
@@ -144,6 +144,10 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   setData(defaultState)
 }
 const loadProfile = async () => {
+  if (!getToken()) {
+    setIsProfileLoading(false)
+    return
+  }
   try {
     const [profileResponse, invoiceResponse, applicationsResponse] = await Promise.all([
   getProfile(),
@@ -160,9 +164,6 @@ const currentApplication = applications.find(
   (item: any) =>
     item.application_number === application?.application_number
 )
-    console.log("APPLICATIONS DATA:", applicationsResponse)
-console.log("FIRST APPLICATION:", applicationsResponse.data?.[0])
-console.log("FIRST APPLICATION KEYS:", Object.keys(applicationsResponse.data?.[0] ?? {}))
     const invoices = invoiceResponse?.data ?? []
 
     const registrationInvoice = invoices.find(
@@ -171,12 +172,6 @@ console.log("FIRST APPLICATION KEYS:", Object.keys(applicationsResponse.data?.[0
 
     const feePaid = registrationInvoice?.status === "PAID"
     const submitted = currentApplication?.status === "SUBMITTED"
-
-    console.log("PROFILE DATA:", profile)
-    console.log("APPLICATION DATA:", application)
-    console.log("INVOICES DATA:", invoices)
-    console.log("FEE PAID:", feePaid)
-
     setData(() => ({
       ...defaultState,
        submitted,      
@@ -227,7 +222,6 @@ console.log("FIRST APPLICATION KEYS:", Object.keys(applicationsResponse.data?.[0
       },
     }))
   } catch (error) {
-    console.error("Failed to load profile:", error)
   } finally {
     setIsProfileLoading(false)
   }
@@ -304,8 +298,7 @@ useEffect(() => {
   data.personal.address &&
   data.personal.phone_number
 )
-console.log("PERSONAL DATA:", data.personal)
-console.log("PERSONAL COMPLETE:", isPersonalComplete)
+
   const isEducationComplete = (mode: "olevel" | "degree") =>
     mode === "olevel"
       ? !!(data.education.schoolName && data.education.examNumber && data.education.subjects.length >= 5)

@@ -18,18 +18,10 @@ export default function SubmitApplicationPage() {
 
 const handleSubmit = async () => {
   if (!confirmed || !data.applicationId) return
-
-  console.log("SUBMITTING APPLICATION:", {
-    id: data.applicationId,
-    applicationNumber: data.applicationNumber,
-    submitted: data.submitted,
-  })
-
   try {
     await submitApplication(data.applicationId)
     setSubmitted(true)
   } catch (error) {
-    console.error("SUBMIT APPLICATION ERROR:", error)
   }
 }
   if (isProfileLoading) {

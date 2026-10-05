@@ -28,12 +28,31 @@ const labelsByMode = {
     supportingRequired: true,
   },
 }
+const MAX_FILE_SIZE = 5 * 1024 * 1024
 
+const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+]
+
+function validateFile(file: File): string | null {
+  if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    return "Invalid file type. Please upload a PDF, JPG, JPEG or PNG file."
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return "File is too large. Maximum allowed size is 5MB."
+  }
+
+  return null
+}
 function UploadRow({
   label,
   required,
   fileName,
   fileUrl,
+  error,
   isUploading,
   onChange,
 }: {
@@ -41,17 +60,21 @@ function UploadRow({
   required: boolean
   fileName: string
   fileUrl: string
+  error: string
   isUploading: boolean
   onChange: (file: File) => void
 }) {
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      onChange(e.target.files[0])
-    }
-  }
+const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
 
+  if (!file) return
+
+  onChange(file)
+  e.target.value = ""
+}
   return (
-    <div className="flex items-center justify-between gap-4 py-4 border-b border-black/5 last:border-b-0">
+    <div className="py-4 border-b border-black/5 last:border-b-0">
+      <div className="flex items-center justify-between gap-4 ">
       <div className="flex items-center gap-3 min-w-0">
         {isUploading ? (
           <div className="w-12 h-12 rounded-lg bg-black/5 flex items-center justify-center flex-shrink-0">
@@ -126,12 +149,18 @@ function UploadRow({
 
         <input
           type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
           onChange={handleFile}
           disabled={isUploading}
           className="hidden"
         />
       </label>
+    </div>
+    {error && (
+      <p className="text-xs text-red-500 mt-2 ml-[60px]">
+        {error}
+      </p>
+    )}
     </div>
   )
 }
@@ -164,7 +193,12 @@ export default function DocumentsPage() {
   const [docs, setDocs] = useState<Documents>(
     data.documents
   )
-
+  const [errors, setErrors] = useState({
+  primaryResult: "",
+  passportPhoto: "",
+  idDocument: "",
+  supporting: "",
+})
   const [documentNames, setDocumentNames] =
     useState({
       primaryResult: getFileNameFromUrl(
@@ -229,51 +263,73 @@ export default function DocumentsPage() {
 
         {/* O'LEVEL RESULT */}
         <UploadRow
-          label={labels.primaryResult}
-          required
-          fileName={documentNames.primaryResult}
-          fileUrl={docs.primaryResult}
-          isUploading={uploading.primaryResult}
-          onChange={async (file) => {
-            setUploading((prev) => ({
-              ...prev,
-              primaryResult: true,
-            }))
+  label={labels.primaryResult}
+  required
+  fileName={documentNames.primaryResult}
+  fileUrl={docs.primaryResult}
+  error={errors.primaryResult}
+  isUploading={uploading.primaryResult}
+  onChange={async (file) => {
+    const validationError = validateFile(file)
 
-            try {
-              const response =
-                await uploadDocument(
-                  file,
-                  "olevel_result"
-                )
+    if (validationError) {
+      setErrors((prev) => ({
+        ...prev,
+        primaryResult: validationError,
+      }))
+      return
+    }
 
-              const documentUrl =
-                response.data.document_url
+    setErrors((prev) => ({
+      ...prev,
+      primaryResult: "",
+    }))
 
-              setDocs((prev) => {
-                const updated = {
-                  ...prev,
-                  primaryResult: documentUrl,
-                }
+    setUploading((prev) => ({
+      ...prev,
+      primaryResult: true,
+    }))
 
-                setDocuments(updated)
+    try {
+      const response = await uploadDocument(
+        file,
+        "olevel_result"
+      )
 
-                return updated
-              })
+      const documentUrl =
+        response.data.document_url
 
-              setDocumentNames((prev) => ({
-                ...prev,
-                primaryResult: file.name,
-              }))
-            } catch (error) {
-            } finally {
-              setUploading((prev) => ({
-                ...prev,
-                primaryResult: false,
-              }))
-            }
-          }}
-        />
+      setDocs((prev) => {
+        const updated = {
+          ...prev,
+          primaryResult: documentUrl,
+        }
+
+        setDocuments(updated)
+
+        return updated
+      })
+
+      setDocumentNames((prev) => ({
+        ...prev,
+        primaryResult: file.name,
+      }))
+    } catch (error) {
+      setErrors((prev) => ({
+        ...prev,
+        primaryResult:
+          error instanceof Error
+            ? error.message
+            : "Upload failed. Please try again.",
+      }))
+    } finally {
+      setUploading((prev) => ({
+        ...prev,
+        primaryResult: false,
+      }))
+    }
+  }}
+/>
 
         {/* PASSPORT */}
         <UploadRow
@@ -281,14 +337,30 @@ export default function DocumentsPage() {
           required
           fileName={documentNames.passportPhoto}
           fileUrl={docs.passportPhoto}
+          error={errors.passportPhoto}
           isUploading={uploading.passportPhoto}
           onChange={async (file) => {
-            setUploading((prev) => ({
-              ...prev,
-              passportPhoto: true,
-            }))
+  const validationError = validateFile(file)
 
-            try {
+  if (validationError) {
+    setErrors((prev) => ({
+      ...prev,
+      passportPhoto: validationError,
+    }))
+    return
+  }
+
+  setErrors((prev) => ({
+    ...prev,
+    passportPhoto: "",
+  }))
+
+  setUploading((prev) => ({
+    ...prev,
+    passportPhoto: true,
+  }))
+
+  try {
               const response =
                 await uploadDocument(
                   file,
@@ -314,7 +386,14 @@ export default function DocumentsPage() {
                 passportPhoto: file.name,
               }))
             } catch (error) {
-            } finally {
+  setErrors((prev) => ({
+    ...prev,
+    passportPhoto:
+      error instanceof Error
+        ? error.message
+        : "Upload failed. Please try again.",
+  }))
+} finally {
               setUploading((prev) => ({
                 ...prev,
                 passportPhoto: false,
@@ -329,14 +408,30 @@ export default function DocumentsPage() {
           required
           fileName={documentNames.idDocument}
           fileUrl={docs.idDocument}
+          error={errors.idDocument}
           isUploading={uploading.idDocument}
           onChange={async (file) => {
-            setUploading((prev) => ({
-              ...prev,
-              idDocument: true,
-            }))
+  const validationError = validateFile(file)
 
-            try {
+  if (validationError) {
+    setErrors((prev) => ({
+      ...prev,
+      idDocument: validationError,
+    }))
+    return
+  }
+
+  setErrors((prev) => ({
+    ...prev,
+    idDocument: "",
+  }))
+
+  setUploading((prev) => ({
+    ...prev,
+    idDocument: true,
+  }))
+
+  try {
               const response =
                 await uploadDocument(
                   file,
@@ -362,7 +457,14 @@ export default function DocumentsPage() {
                 idDocument: file.name,
               }))
             } catch (error) {
-            } finally {
+  setErrors((prev) => ({
+    ...prev,
+    idDocument:
+      error instanceof Error
+        ? error.message
+        : "Upload failed. Please try again.",
+  }))
+} finally {
               setUploading((prev) => ({
                 ...prev,
                 idDocument: false,
@@ -378,13 +480,29 @@ export default function DocumentsPage() {
           fileName={documentNames.supporting}
           fileUrl={docs.supporting}
           isUploading={uploading.supporting}
+          error={errors.supporting}
           onChange={async (file) => {
-            setUploading((prev) => ({
-              ...prev,
-              supporting: true,
-            }))
+  const validationError = validateFile(file)
 
-            try {
+  if (validationError) {
+    setErrors((prev) => ({
+      ...prev,
+      supporting: validationError,
+    }))
+    return
+  }
+
+  setErrors((prev) => ({
+    ...prev,
+    supporting: "",
+  }))
+
+  setUploading((prev) => ({
+    ...prev,
+    supporting: true,
+  }))
+
+  try {
               const response =
                 await uploadDocument(
                   file,
@@ -410,7 +528,14 @@ export default function DocumentsPage() {
                 supporting: file.name,
               }))
             } catch (error) {
-            } finally {
+  setErrors((prev) => ({
+    ...prev,
+    supporting:
+      error instanceof Error
+        ? error.message
+        : "Upload failed. Please try again.",
+  }))
+} finally {
               setUploading((prev) => ({
                 ...prev,
                 supporting: false,

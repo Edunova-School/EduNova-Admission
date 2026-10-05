@@ -1,20 +1,16 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api/v1"
 const TOKEN_KEY = "edunova_token"
-
 export const getToken = () => localStorage.getItem(TOKEN_KEY)
 export const setToken = (token: string) => {
   localStorage.setItem(TOKEN_KEY, token)
 }
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY)
-
 interface ApiOptions extends RequestInit {
   auth?: boolean 
 }
-
 async function apiFetch(path: string, options: ApiOptions = {}) {
   const { auth = true, headers, ...rest } = options
   const finalHeaders: Record<string, string> = { ...(headers as Record<string, string>) }
-
   if (rest.body && !(rest.body instanceof FormData)) {
     finalHeaders["Content-Type"] = "application/json"
   }
@@ -22,13 +18,9 @@ async function apiFetch(path: string, options: ApiOptions = {}) {
     const token = getToken()
     if (token) finalHeaders["Authorization"] = `Bearer ${token}`
   }
-
   const res = await fetch(`${BASE_URL}${path}`, { ...rest, headers: finalHeaders })
-
   let data: any = null
   try { data = await res.json() } catch { }
-  
-console.log("API ERROR RESPONSE:", res.status, data)
 if (!res.ok) {
 
   const isTokenExpired =

@@ -182,8 +182,8 @@ const handleContinue = async () => {
           <Field label="Gender">
             <select name="gender" value={form.gender} onChange={handleChange} className={inputClass}>
               <option value="">Select...</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+              <option value="MALE">MALE</option>
+              <option value="FEMALE">FEMALE</option>
             </select>
           </Field>
         </div>

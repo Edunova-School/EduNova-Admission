@@ -74,6 +74,7 @@ export default function EducationPage() {
   const isDegreeMode = config.educationMode === "degree"
   const isLockedGraduate = data.isEduNovaGraduate
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [form, setForm] = useState<EducationInfo>(
     !isDegreeMode && data.education.subjects.length === 0
@@ -146,8 +147,6 @@ if (filledSubjects.length < 5) {
       newErrors.jambScore = "JAMB score must be between 0 and 400."
     }
   }
-
-
   const compulsorySubjects = form.subjects.some(
     s => s.subject === "English Language" && s.grade
   )
@@ -174,6 +173,7 @@ if (filledSubjects.length < 5) {
   }
 
   try {
+    setIsSubmitting(true)
     if (isDegreeMode) {
       await updateProfile({
         secondary_school_attended: form.institution,
@@ -205,7 +205,9 @@ if (filledSubjects.length < 5) {
       ? err.message 
       : "Something went wrong. Please try again."
   })
-}
+}finally {
+    setIsSubmitting(false)
+  }
 }
 
   return (
@@ -369,7 +371,7 @@ className={inputClass}
   usedSubjects={usedSubjects}
   locked={
     s.subject === "English Language" ||
-    s.subject === "Mathematics"
+    s.subject === "Mathematics"     
   }
 />
                   <select value={s.grade} onChange={(e) => updateSubject(i, "grade", e.target.value)} className={`${inputClass} w-24 flex-shrink-0`}>
@@ -402,9 +404,9 @@ className={inputClass}
         <button onClick={() => navigate(`${base}/personal-information`)} className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors">
           <ArrowLeft size={16} /> Back
         </button>
-        <button onClick={handleContinue} className="flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
-          Continue <ArrowRight size={16} />
-        </button>
+        <button onClick={handleContinue} disabled={ isSubmitting} className="self-end flex items-center gap-2 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold px-7 py-3.5 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
+    {isSubmitting ? "Saving..." : "Continue"} <ArrowRight size={16} />
+</button>
       </div>
     </div>
   )

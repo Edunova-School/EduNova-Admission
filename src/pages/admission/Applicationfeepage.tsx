@@ -14,7 +14,9 @@ import type { Track } from "./trackconfig"
 import {
   getInvoices,
   initializeInvoicePayment,
+  verifyPayment,
 } from "../../lib/api"
+
 const naira = (n: number) => `₦${n.toLocaleString()}`
 
 const paymentMethods = [
@@ -40,96 +42,94 @@ export default function ApplicationFeePage() {
   const [loadingInvoice, setLoadingInvoice] = useState(true)
   const [error, setError] = useState("")
 
-useEffect(() => {
-  const loadInvoice = async () => {
+  useEffect(() => {
+    const loadInvoice = async () => {
+      try {
+        setLoadingInvoice(true)
+        setError("")
+
+        const response = await getInvoices()
+
+
+
+        const invoices = response?.data ?? []
+
+        const registrationInvoice = invoices.find(
+          (item: any) => item.fee_type === "REGISTRATION_FEE"
+        )
+
+        if (registrationInvoice?.status === "PAID") {
+          setInvoice(registrationInvoice)
+          setFeePaid(true)
+        } else {
+          setInvoice(registrationInvoice ?? null)
+        }
+      } catch (err) {
+        console.error("Failed to load invoice:", err)
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load your application fee."
+        )
+      } finally {
+        setLoadingInvoice(false)
+      }
+    }
+
+    loadInvoice()
+  }, [setFeePaid])
+
+  const handlePay = async () => {
+    if (!invoice) return
+
     try {
-      setLoadingInvoice(true)
+      setProcessing(true)
       setError("")
 
-      const response = await getInvoices()
+      // 1. Initialize the payment
+      const initializeResponse = await initializeInvoicePayment(invoice.id)
 
-      console.log("INVOICES RESPONSE:", response)
+      
+      const payment = initializeResponse?.data
 
-      const invoices = response?.data ?? []
+      if (!payment?.reference) {
+        throw new Error("Payment reference was not returned.")
+      }
+      await verifyPayment(payment.reference)
+      // 3. Refresh invoices after verification
+      const invoiceResponse = await getInvoices()
+      const invoices = invoiceResponse?.data ?? []
 
-      const registrationInvoice = invoices.find(
-  (item: any) => item.fee_type === "REGISTRATION_FEE"
-)
+      // 4. Confirm that the registration fee is now PAID
+      const paidInvoice = invoices.find(
+        (item: any) =>
+          item.fee_type === "REGISTRATION_FEE" &&
+          item.status === "PAID"
+      )
 
-if (registrationInvoice?.status === "PAID") {
-  setInvoice(registrationInvoice)
-  setFeePaid(true)
-} else {
-  setInvoice(registrationInvoice ?? null)
-}
+      if (!paidInvoice) {
+        throw new Error(
+          "Payment was verified, but the registration fee is not marked as paid yet."
+        )
+      }
+
+      // 5. Update the application state
+      setInvoice(paidInvoice)
+      setFeePaid(true)
     } catch (err) {
-      console.error("Failed to load invoice:", err)
+      console.error("Payment failed:", err)
 
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to load your application fee."
+          : "Unable to complete payment."
       )
     } finally {
-      setLoadingInvoice(false)
+      setProcessing(false)
     }
   }
 
-  loadInvoice()
-}, [])
-
-const handlePay = async () => {
-  if (!invoice) return
-
-  try {
-    setProcessing(true)
-    setError("")
-
-    // 1. Initialize payment
-    const initializeResponse = await initializeInvoicePayment(invoice.id)
-
-    console.log(
-      "PAYMENT INITIALIZATION RESPONSE:",
-      initializeResponse
-    )
-
-    const payment = initializeResponse?.data
-
-    if (!payment?.reference) {
-      throw new Error("Payment reference was not returned.")
-    }
-
-const invoiceResponse = await getInvoices()
-
-
-const invoices = invoiceResponse?.data ?? []
-
-const paidInvoice = invoices.find(
-  (item: any) =>
-    item.fee_type === "REGISTRATION_FEE" &&
-    item.status === "PAID"
-)
-
-if (paidInvoice) {
-  setInvoice(paidInvoice)
-  setFeePaid(true)
-} else {
-  throw new Error(
-    "Payment verification completed, but the registration fee is not marked as paid yet."
-  )
-}
-  } catch (err) {
-    console.error("Payment failed:", err)
-
-    setError(
-      err instanceof Error
-        ? err.message
-        : "Unable to complete payment."
-    )
-  } finally {
-    setProcessing(false)
-  }
-}
   if (data.feePaid) {
     return (
       <div className="flex flex-col gap-6">

@@ -15,13 +15,27 @@ export default function SubmitApplicationPage() {
   const navigate = useNavigate()
   const { data, setSubmitted, isProfileLoading } = useApplication()
   const [confirmed, setConfirmed] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
 const handleSubmit = async () => {
-  if (!confirmed || !data.applicationId) return
+  if (
+    !confirmed ||
+    !data.applicationId ||
+    submitting
+  ) {
+    return
+  }
+
   try {
+    setSubmitting(true)
+
     await submitApplication(data.applicationId)
+
     setSubmitted(true)
   } catch (error) {
+    console.error("Failed to submit application:", error)
+  } finally {
+    setSubmitting(false)
   }
 }
   if (isProfileLoading) {
@@ -80,9 +94,13 @@ const handleSubmit = async () => {
         </button>
       </div>
 
-      <button onClick={() => navigate(`${base}/fee`)} className="flex items-center gap-1.5 text-sm text-black/50 hover:text-black transition-colors w-fit">
-        <ArrowLeft size={16} /> Back
-      </button>
+      <button
+  onClick={handleSubmit}
+  disabled={!confirmed || submitting}
+  className="w-full mt-6 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-4 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+>
+  {submitting ? "Submitting Application..." : "Submit Application"}
+</button>
     </div>
   )
 }

@@ -317,3 +317,17 @@ export const verifyPayment = (reference: string) =>
 export const getApplications = () => apiFetch("/admission/applications", { method: "GET" })
 export const submitApplication = (applicationId: string) => apiFetch(`/admission/applications/${applicationId}/submit`, { method: "POST" })
 export const acceptAdmission = (applicationId: string) => apiFetch(`/admission/applications/${applicationId}/accept`, { method: "POST" })
+export const getNotifications = () =>
+  apiFetch("/admission/notifications", {
+    method: "GET",
+  })
+
+export const getUnreadNotifications = () =>
+  apiFetch("/admission/notifications/unread", {
+    method: "GET",
+  })
+
+export const markNotificationAsRead = (notificationId: string) =>
+  apiFetch(`/admission/notifications/${notificationId}/read`, {
+    method: "GET",
+  })

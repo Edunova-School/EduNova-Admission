@@ -1,4 +1,4 @@
-    import { register, login,logout, verifyEmail  } from "../../lib/api"
+    import { register, login, logout, verifyEmail, getNotifications, getUnreadNotifications, markNotificationAsRead  } from "../../lib/api"
     import { useState, useEffect } from "react"
     import { useNavigate, useParams } from "react-router-dom"
     import {
@@ -11,9 +11,21 @@
     import { trackConfigs } from "./trackconfig"
     import type { Track } from "./trackconfig"
 
+
     type Step =
         | "entry" | "login" | "faculty" | "department" | "programme" | "requirements"
         | "applicantType" | "eduNovaLookup" | "account" | "verify" | "created" | "dashboard"
+
+    type Notification = {
+    id: string
+    title: string
+    message: string
+    notification_type: string
+    link: string | null
+    read_at: string | null
+    created_at: string
+    data: Record<string, any>
+}
 
     const flowOrder: Step[] = ["entry", "faculty", "department", "programme", "requirements", "applicantType", "account", "created"]
     function BackButton({ onClick, label = "Back" }: { onClick: () => void; label?: string }) {
@@ -68,8 +80,6 @@
     ];
 
     const isStandardDomain = standardDomains.includes(domain);
-
-    // Allow institutional/educational domains
     const isInstitutionalDomain =
         domain.endsWith(".edu") ||
         domain.endsWith(".edu.ng") ||
@@ -117,12 +127,76 @@
 
     return "";
     };
+    const formatNotificationTime = (date: string) => {
+    const notificationDate = new Date(date)
+    const now = new Date()
+
+    const difference = now.getTime() - notificationDate.getTime()
+
+    const minutes = Math.floor(difference / (1000 * 60))
+    const hours = Math.floor(difference / (1000 * 60 * 60))
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+
+    if (minutes < 1) {
+        return "Just now"
+    }
+
+    if (minutes < 60) {
+        return `${minutes}m ago`
+    }
+
+    if (hours < 24) {
+        return `${hours}h ago`
+    }
+
+    if (days < 7) {
+        return `${days}d ago`
+    }
+
+    return notificationDate.toLocaleDateString("en-NG", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    })
+}
     export default function AdmissionFlow() {
         const { track: trackParam } = useParams<{ track: string }>()
         const track = (trackParam ?? "undergraduate") as Track
         const config = trackConfigs[track]
+        const [notifications, setNotifications] = useState<Notification[]>([])
+        const [unreadCount, setUnreadCount] = useState(0)
+        const [isLoadingNotifications, setIsLoadingNotifications] = useState(false)
+        const [notificationError, setNotificationError] = useState("")
+        const [activeNotification, setActiveNotification] = useState<string | null>(null)
 
         const navigate = useNavigate()
+        const loadNotifications = async () => {
+    try {
+        setIsLoadingNotifications(true)
+        setNotificationError("")
+
+        const [allResponse, unreadResponse] = await Promise.all([
+            getNotifications(),
+            getUnreadNotifications(),
+        ])
+
+        const allNotifications: Notification[] =
+            allResponse?.data ?? []
+
+        const unreadNotifications: Notification[] =
+            unreadResponse?.data ?? []
+
+        setNotifications(allNotifications)
+        setUnreadCount(unreadNotifications.length)
+    } catch (error) {
+        console.error("Failed to load notifications:", error)
+        setNotificationError(
+            "Unable to load notifications right now."
+        )
+    } finally {
+        setIsLoadingNotifications(false)
+    }
+}
 
     const {
     data,
@@ -184,7 +258,6 @@ useEffect(() => {
     return
 }
 
-    // User is authenticated.
     if (authenticated) {
         const restoreSession = async () => {
             setIsRestoringSession(true)
@@ -261,7 +334,85 @@ useEffect(() => {
             setIsSubmitting(false)
         }
         }
+//     const loadNotifications = async () => {
+//     try {
+//         setIsLoadingNotifications(true)
 
+//         const [notificationsResponse, unreadResponse] = await Promise.all([
+//             getNotifications(),
+//             getUnreadNotifications(),
+//         ])
+
+//         // We'll map the actual backend response here
+//         setNotifications(...)
+//         setUnreadCount(...)
+//     } catch (error) {
+//         console.error("Failed to load notifications:", error)
+//     } finally {
+//         setIsLoadingNotifications(false)
+//     }
+// }
+const handleNotificationLink = (notification: Notification) => {
+    if (notification.link === "/admission/documents") {
+        setActiveSection("documents")
+    }
+}
+const handleNotificationClick = async (
+    notification: Notification
+) => {
+    setActiveNotification((current) =>
+        current === notification.id ? null : notification.id
+    )
+
+    // Already read
+    if (notification.read_at) {
+        return
+    }
+
+    try {
+        await markNotificationAsRead(notification.id)
+
+        setNotifications((current) =>
+            current.map((item) =>
+                item.id === notification.id
+                    ? {
+                        ...item,
+                        read_at: new Date().toISOString(),
+                    }
+                    : item
+            )
+        )
+
+        setUnreadCount((current) => Math.max(0, current - 1))
+    } catch (error) {
+        console.error(
+            "Failed to mark notification as read:",
+            error
+        )
+    }
+}
+useEffect(() => {
+    if (step === "dashboard") {
+        loadNotifications()
+    }
+}, [step])
+useEffect(() => {
+    if (step !== "dashboard") return
+
+    const testNotifications = async () => {
+        try {
+            const response = await getNotifications()
+            console.log("NOTIFICATIONS RESPONSE:", response)
+
+            const unread = await getUnreadNotifications()
+            console.log("UNREAD NOTIFICATIONS RESPONSE:", unread)
+        } catch (error) {
+            console.error("NOTIFICATION ERROR:", error)
+        }
+    }
+
+    testNotifications()
+}, [step])
     const handleCreateAccount = async () => {
     setAccountError("")
     setIsSubmitting(true)
@@ -1081,12 +1232,177 @@ useEffect(() => {
                     </div>
 
                     {/* Notifications */}
-                    <div className="flex items-start gap-3 px-1">
-                        <Bell size={17} strokeWidth={1.6} className="text-black/35 mt-0.5 shrink-0" />
-                        <p className="text-xs leading-relaxed text-black/40">
-                            You'll be notified here as soon as there's an update on your application or admission decision.
-                        </p>
-                    </div>
+<div className="rounded-2xl bg-white border border-black/5 overflow-hidden">
+
+    {/* Header */}
+    <div className="flex items-center justify-between px-6 py-5 border-b border-black/5">
+        <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#1E3A8A]/8 flex items-center justify-center">
+                <Bell
+                    size={17}
+                    strokeWidth={1.7}
+                    className="text-[#1E3A8A]"
+                />
+            </div>
+
+            <div>
+                <h3 className="font-serif font-semibold text-base text-black">
+                    Notifications
+                </h3>
+
+                {unreadCount > 0 && (
+                    <p className="text-xs text-black/40 mt-0.5">
+                        {unreadCount} unread
+                    </p>
+                )}
+            </div>
+        </div>
+
+        {unreadCount > 0 && (
+            <span className="min-w-6 h-6 px-2 rounded-full bg-red-50 text-red-600 text-[11px] font-semibold flex items-center justify-center">
+                {unreadCount}
+            </span>
+        )}
+    </div>
+
+    {/* Loading */}
+    {isLoadingNotifications && (
+        <div className="px-6 py-8 text-center">
+            <div className="w-5 h-5 mx-auto border-2 border-black/10 border-t-[#1E3A8A] rounded-full animate-spin" />
+
+            <p className="text-xs text-black/40 mt-3">
+                Loading notifications...
+            </p>
+        </div>
+    )}
+
+    {/* Error */}
+    {!isLoadingNotifications && notificationError && (
+        <div className="px-6 py-7 text-center">
+            <p className="text-xs text-red-500">
+                {notificationError}
+            </p>
+
+            <button
+                onClick={loadNotifications}
+                className="text-xs font-medium text-[#1E3A8A] mt-2 hover:text-[#B8901F]"
+            >
+                Try again
+            </button>
+        </div>
+    )}
+
+    {/* Empty */}
+    {!isLoadingNotifications &&
+        !notificationError &&
+        notifications.length === 0 && (
+            <div className="px-6 py-8 text-center">
+                <Bell
+                    size={20}
+                    strokeWidth={1.5}
+                    className="mx-auto text-black/20"
+                />
+
+                <p className="text-sm text-black/50 mt-3">
+                    No notifications yet
+                </p>
+
+                <p className="text-xs text-black/30 mt-1">
+                    Updates about your application will appear here.
+                </p>
+            </div>
+        )}
+
+    {/* Notification list */}
+    {!isLoadingNotifications &&
+        !notificationError &&
+        notifications.length > 0 && (
+            <div className="divide-y divide-black/5">
+                {notifications.map((notification) => {
+                    const isUnread = !notification.read_at
+                    const isActive =
+                        activeNotification === notification.id
+
+                    return (
+                        <div key={notification.id}>
+                            <button
+                                onClick={() =>
+                                    handleNotificationClick(notification)
+                                }
+                                className={`w-full text-left px-6 py-4 transition-colors ${
+                                    isUnread
+                                        ? "bg-[#FBF7EC]/60 hover:bg-[#FBF7EC]"
+                                        : "hover:bg-black/[0.015]"
+                                }`}
+                            >
+                                <div className="flex items-start gap-3">
+
+                                    {/* Unread indicator */}
+                                    <div className="pt-1.5 shrink-0">
+                                        <span
+                                            className={`block w-2 h-2 rounded-full ${
+                                                isUnread
+                                                    ? "bg-[#B8901F]"
+                                                    : "bg-transparent"
+                                            }`}
+                                        />
+                                    </div>
+
+                                    <div className="min-w-0 flex-1">
+
+                                        <div className="flex items-start justify-between gap-3">
+                                            <p
+                                                className={`text-sm leading-snug ${
+                                                    isUnread
+                                                        ? "font-semibold text-black"
+                                                        : "font-medium text-black/75"
+                                                }`}
+                                            >
+                                                {notification.title}
+                                            </p>
+
+                                            <span className="text-[10px] text-black/30 whitespace-nowrap">
+                                                {formatNotificationTime(
+                                                    notification.created_at
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        <p
+                                            className={`text-xs mt-1 leading-relaxed ${
+                                                isActive
+                                                    ? "text-black/65"
+                                                    : "text-black/45 line-clamp-2"
+                                            }`}
+                                        >
+                                            {notification.message}
+                                        </p>
+
+                                        {isActive && notification.link && (
+                                            <button
+    type="button"
+    onClick={(event) => {
+        event.stopPropagation()
+
+        if (notification.link === "/admission/documents") {
+            setActiveSection("documents")
+        }
+    }}
+    className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1E3A8A] mt-3 hover:text-[#B8901F]"
+>
+    View related section
+    <ArrowRight size={13} />
+</button>
+                                        )}
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    )
+                })}
+            </div>
+        )}
+</div>
 
                 </div>
             </div>

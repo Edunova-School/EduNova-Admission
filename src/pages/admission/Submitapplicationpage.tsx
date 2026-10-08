@@ -14,8 +14,15 @@ export default function SubmitApplicationPage() {
 
   const navigate = useNavigate()
   const { data, setSubmitted, isProfileLoading } = useApplication()
+  console.log("SubmitApplicationPage:", {
+  data,
+  isProfileLoading,
+  applicationId: data?.applicationId,
+  submitted: data?.submitted,
+})
   const [confirmed, setConfirmed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  
 
 const handleSubmit = async () => {
   if (
@@ -39,7 +46,13 @@ const handleSubmit = async () => {
   }
 }
   if (isProfileLoading) {
-  return null
+  return (
+    <div className="flex items-center justify-center py-16">
+      <div className="text-sm text-black/50">
+        Loading application...
+      </div>
+    </div>
+  )
 }
   if (data.submitted) {
     return (

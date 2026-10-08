@@ -1,5 +1,5 @@
 import { getInvoices, getProfile, getApplications, getToken } from "../../lib/api"
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import type {ReactNode } from "react"
 import type { Track } from "./trackconfig"
 
@@ -149,11 +149,12 @@ const fetchProfile = async () => {
     throw new Error("Not authenticated")
   }
 
-  const [profileResponse, invoiceResponse, applicationsResponse] = await Promise.all([
-    getProfile(),
-    getInvoices(),
-    getApplications(),
-  ])
+  const [profileResponse, invoiceResponse, applicationsResponse] =
+    await Promise.all([
+      getProfile(),
+      getInvoices(),
+      getApplications(),
+    ])
 
   const profile = profileResponse?.data?.profile
   const application = profileResponse?.data?.application
@@ -165,22 +166,27 @@ const fetchProfile = async () => {
   const applications = applicationsResponse?.data ?? []
 
   const currentApplication = applications.find(
-    (item: any) => item.application_number === application?.application_number
+    (item: any) =>
+      item.application_number === application?.application_number
   )
-
+console.log("CURRENT APPLICATION:", currentApplication)
   const invoices = invoiceResponse?.data ?? []
+
   const registrationInvoice = invoices.find(
-    (item: any) => item.fee_type === "REGISTRATION_FEE"
+    (item: any) =>
+      item.fee_type === "REGISTRATION_FEE"
   )
 
   const feePaid = registrationInvoice?.status === "PAID"
-  const submitted = currentApplication?.status === "SUBMITTED"
+  const submitted =
+    currentApplication?.status === "SUBMITTED"
 
-  setData(() => ({
+  setData({
     ...defaultState,
     submitted,
     applicantId: profile.id ?? "",
-    applicantName: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+    applicantName:
+      `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
     applicantEmail: "",
     accountCreated: true,
 
@@ -200,34 +206,63 @@ const fetchProfile = async () => {
       lga_of_origin: profile.lga_of_origin ?? "",
       address: profile.address ?? "",
       phone_number: profile.phone_number ?? "",
-      alternate_phone_number: profile.alternate_phone_number ?? "",
+      alternate_phone_number:
+        profile.alternate_phone_number ?? "",
     },
 
     education: {
       ...defaultState.education,
-      schoolName: profile.secondary_school_attended ?? "",
+      schoolName:
+        profile.secondary_school_attended ?? "",
       examType: profile.exam_type ?? "",
       examNumber: profile.exam_number ?? "",
-      examYear: profile.exam_year?.toString() ?? "",
-      jambNumber: profile.jamb_registration_number ?? "",
-      jambScore: profile.jamb_score?.toString() ?? "",
-      subjects: Array.isArray(profile.olevel_results) ? profile.olevel_results : [],
+      examYear:
+        profile.exam_year?.toString() ?? "",
+      jambNumber:
+        profile.jamb_registration_number ?? "",
+      jambScore:
+        profile.jamb_score?.toString() ?? "",
+      subjects: Array.isArray(profile.olevel_results)
+        ? profile.olevel_results
+        : [],
     },
 
     documents: {
       ...defaultState.documents,
-      primaryResult: profile.olevel_result_url ?? "",
-      passportPhoto: profile.passport_url ?? "",
-      idDocument: profile.birth_certificate_url ?? "",
-      supporting: profile.jamb_result_url ?? "",
+      primaryResult:
+        profile.olevel_result_url ?? "",
+      passportPhoto:
+        profile.passport_url ?? "",
+      idDocument:
+        profile.birth_certificate_url ?? "",
+      supporting:
+        profile.jamb_result_url ?? "",
     },
-  }))
+  })
 }
 
-// Used by callers (AdmissionFlow): rejects on failure
 const refreshProfile = async () => {
-  await fetchProfile()
-}  
+  try {
+    setIsProfileLoading(true)
+    await fetchProfile()
+  } finally {
+    setIsProfileLoading(false)
+  }
+}
+
+useEffect(() => {
+  refreshProfile().catch((error) => {
+    console.error(
+      "Failed to load application profile:",
+      error
+    )
+  })
+}, [])
+
+// Used by callers (AdmissionFlow): rejects on failure
+// const refreshProfile = async () => {
+//   await fetchProfile()
+// }  
   const setTrack = (track: Track) =>
     setData((prev) => ({ ...prev, track }))
 

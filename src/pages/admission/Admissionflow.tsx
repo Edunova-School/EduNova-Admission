@@ -351,11 +351,11 @@ setIsRestoringSession(false)
 //         setIsLoadingNotifications(false)
 //     }
 // }
-const handleNotificationLink = (notification: Notification) => {
-    if (notification.link === "/admission/documents") {
-        setActiveSection("documents")
-    }
-}
+// const handleNotificationLink = (notification: Notification) => {
+//     if (notification.link === "/admission/documents") {
+//         setActiveSection("documents")
+//     }
+// }
 const handleNotificationClick = async (
     notification: Notification
 ) => {

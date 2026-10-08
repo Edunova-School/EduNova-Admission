@@ -1,5 +1,5 @@
 import { getInvoices, getProfile, getApplications, getToken } from "../../lib/api"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState } from "react"
 import type {ReactNode } from "react"
 import type { Track } from "./trackconfig"
 
@@ -142,107 +142,92 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   localStorage.removeItem("edunova_selection")
   localStorage.removeItem("edunova_submitted")
   setData(defaultState)
+  setIsProfileLoading(false)
 }
-const loadProfile = async () => {
+const fetchProfile = async () => {
   if (!getToken()) {
-    setIsProfileLoading(false)
-    return
+    throw new Error("Not authenticated")
   }
-  try {
-    const [profileResponse, invoiceResponse, applicationsResponse] = await Promise.all([
-  getProfile(),
-  getInvoices(),
-  getApplications(),
-])
 
-const profile = profileResponse.data.profile
-const application = profileResponse.data.application
+  const [profileResponse, invoiceResponse, applicationsResponse] = await Promise.all([
+    getProfile(),
+    getInvoices(),
+    getApplications(),
+  ])
 
-const applications = applicationsResponse.data ?? []
+  const profile = profileResponse?.data?.profile
+  const application = profileResponse?.data?.application
 
-const currentApplication = applications.find(
-  (item: any) =>
-    item.application_number === application?.application_number
-)
-    const invoices = invoiceResponse?.data ?? []
-
-    const registrationInvoice = invoices.find(
-      (item: any) => item.fee_type === "REGISTRATION_FEE"
-    )
-
-    const feePaid = registrationInvoice?.status === "PAID"
-    const submitted = currentApplication?.status === "SUBMITTED"
-    setData(() => ({
-      ...defaultState,
-       submitted,      
-
-      applicantId: profile.id ?? "",
-      applicantName: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
-      applicantEmail: "",
-      accountCreated: true,
-
-      faculty: application?.faculty ?? "",
-      department: application?.department ?? "",
-      programmeTitle: application?.programme ?? "",
-      applicationNumber: application?.application_number ?? "",
-      applicationId: currentApplication?.id ?? "",
-      feePaid,
-
-      personal: {
-        ...defaultState.personal,
-        date_of_birth: profile.date_of_birth ?? "",
-        gender: profile.gender ?? "",
-        nationality: profile.nationality ?? "",
-        state_of_origin: profile.state_of_origin ?? "",
-        lga_of_origin: profile.lga_of_origin ?? "",
-        address: profile.address ?? "",
-        phone_number: profile.phone_number ?? "",
-        alternate_phone_number: profile.alternate_phone_number ?? "",
-      },
-
-      education: {
-        ...defaultState.education,
-        schoolName: profile.secondary_school_attended ?? "",
-        examType: profile.exam_type ?? "",
-        examNumber: profile.exam_number ?? "",
-        examYear: profile.exam_year?.toString() ?? "",
-        jambNumber: profile.jamb_registration_number ?? "",
-        jambScore: profile.jamb_score?.toString() ?? "",
-        subjects: Array.isArray(profile.olevel_results)
-          ? profile.olevel_results
-          : [],
-      },
-
-      documents: {
-        ...defaultState.documents,
-        primaryResult: profile.olevel_result_url ?? "",
-        passportPhoto: profile.passport_url ?? "",
-        idDocument: profile.birth_certificate_url ?? "",
-        supporting: profile.jamb_result_url ?? "",
-      },
-    }))
-  } catch (error) {
-  } finally {
-    setIsProfileLoading(false)
+  if (!profile) {
+    throw new Error("Profile not found")
   }
+
+  const applications = applicationsResponse?.data ?? []
+
+  const currentApplication = applications.find(
+    (item: any) => item.application_number === application?.application_number
+  )
+
+  const invoices = invoiceResponse?.data ?? []
+  const registrationInvoice = invoices.find(
+    (item: any) => item.fee_type === "REGISTRATION_FEE"
+  )
+
+  const feePaid = registrationInvoice?.status === "PAID"
+  const submitted = currentApplication?.status === "SUBMITTED"
+
+  setData(() => ({
+    ...defaultState,
+    submitted,
+    applicantId: profile.id ?? "",
+    applicantName: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+    applicantEmail: "",
+    accountCreated: true,
+
+    faculty: application?.faculty ?? "",
+    department: application?.department ?? "",
+    programmeTitle: application?.programme ?? "",
+    applicationNumber: application?.application_number ?? "",
+    applicationId: currentApplication?.id ?? "",
+    feePaid,
+
+    personal: {
+      ...defaultState.personal,
+      date_of_birth: profile.date_of_birth ?? "",
+      gender: profile.gender ?? "",
+      nationality: profile.nationality ?? "",
+      state_of_origin: profile.state_of_origin ?? "",
+      lga_of_origin: profile.lga_of_origin ?? "",
+      address: profile.address ?? "",
+      phone_number: profile.phone_number ?? "",
+      alternate_phone_number: profile.alternate_phone_number ?? "",
+    },
+
+    education: {
+      ...defaultState.education,
+      schoolName: profile.secondary_school_attended ?? "",
+      examType: profile.exam_type ?? "",
+      examNumber: profile.exam_number ?? "",
+      examYear: profile.exam_year?.toString() ?? "",
+      jambNumber: profile.jamb_registration_number ?? "",
+      jambScore: profile.jamb_score?.toString() ?? "",
+      subjects: Array.isArray(profile.olevel_results) ? profile.olevel_results : [],
+    },
+
+    documents: {
+      ...defaultState.documents,
+      primaryResult: profile.olevel_result_url ?? "",
+      passportPhoto: profile.passport_url ?? "",
+      idDocument: profile.birth_certificate_url ?? "",
+      supporting: profile.jamb_result_url ?? "",
+    },
+  }))
 }
-useEffect(() => {
-  const savedSelection = localStorage.getItem("edunova_selection")
 
-  if (savedSelection) {
-    const selection = JSON.parse(savedSelection)
-
-    setData((prev) => ({
-      ...prev,
-      faculty: selection.faculty ?? "",
-      department: selection.department ?? "",
-      programmeTitle: selection.programmeTitle ?? "",
-    }))
-  }
-
-  loadProfile()
-}, [])
-  
+// Used by callers (AdmissionFlow): rejects on failure
+const refreshProfile = async () => {
+  await fetchProfile()
+}  
   const setTrack = (track: Track) =>
     setData((prev) => ({ ...prev, track }))
 
@@ -329,7 +314,7 @@ const progressPercent = (mode: "olevel" | "degree") => {
   value={{
     data,
     isProfileLoading,
-    refreshProfile: loadProfile,
+    refreshProfile,
     resetApplication,
     setTrack,
     setSelection,

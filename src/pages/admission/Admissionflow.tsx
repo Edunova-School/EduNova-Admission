@@ -1,4 +1,4 @@
-    import { register, login, logout, verifyEmail, getNotifications, getUnreadNotifications, markNotificationAsRead  } from "../../lib/api"
+    import { register, login, logout, verifyEmail, getToken, getNotifications, getUnreadNotifications, markNotificationAsRead } from "../../lib/api"
     import { useState, useEffect } from "react"
     import { useNavigate, useParams } from "react-router-dom"
     import {
@@ -258,27 +258,26 @@ useEffect(() => {
     return
 }
 
-    if (authenticated) {
-        const restoreSession = async () => {
-            setIsRestoringSession(true)
-
-            try {
-                await refreshProfile()
-                setStep("dashboard")
-            } catch (error) {
-                sessionStorage.removeItem(
-                    "edunova_authenticated"
-                )
-
-                setStep("entry")
-            } finally {
-                setIsRestoringSession(false)
-            }
+    if (authenticated && getToken()) {
+    const restoreSession = async () => {
+        setIsRestoringSession(true)
+        try {
+            await refreshProfile()
+            setStep("dashboard")
+        } catch (error) {
+            sessionStorage.removeItem("edunova_authenticated")
+            setStep("entry")
+        } finally {
+            setIsRestoringSession(false)
         }
-
-        restoreSession()
-        return
     }
+    restoreSession()
+    return
+}
+
+// Flag without a token = stale session
+sessionStorage.removeItem("edunova_authenticated")
+setIsRestoringSession(false)
 
     setIsRestoringSession(false)
 }, [])
@@ -391,6 +390,14 @@ const handleNotificationClick = async (
         )
     }
 }
+useEffect(() => {
+  const onExpired = () => {
+    resetApplication()
+    setStep("entry")
+  }
+  window.addEventListener("auth-expired", onExpired)
+  return () => window.removeEventListener("auth-expired", onExpired)
+}, [resetApplication])
 useEffect(() => {
     if (step === "dashboard") {
         loadNotifications()

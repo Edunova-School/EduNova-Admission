@@ -1,11 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000/api/v1"
 const TOKEN_KEY = "edunova_token"
-
-// ---------- Session expiry state ----------
 let sessionEnded = false
 let expiryTimer: number | undefined
-
-// ---------- Token storage (sessionStorage: cleared when the tab closes) ----------
 export const getToken = () => sessionStorage.getItem(TOKEN_KEY)
 
 export const setToken = (token: string) => {
@@ -16,15 +12,17 @@ export const setToken = (token: string) => {
 
 export const clearToken = () => {
   sessionStorage.removeItem(TOKEN_KEY)
+  sessionStorage.removeItem("edunova_authenticated")
+  sessionStorage.removeItem("edunova_pending_verification")
+  sessionStorage.removeItem("edunova_pending_email")
   localStorage.removeItem("application_data")
   clearTimeout(expiryTimer)
 }
 
-// ---------- Session expiry ----------
 export function handleSessionExpired(
   message = "Your session has expired. Please login again to continue."
 ) {
-  if (sessionEnded) return // fire only once, even with parallel requests
+  if (sessionEnded) return 
   sessionEnded = true
   clearToken()
   window.dispatchEvent(new CustomEvent("auth-expired", { detail: { message } }))
@@ -40,7 +38,6 @@ function getTokenExpiry(token: string): number | null {
   }
 }
 
-// Call after login and on app start
 export function scheduleSessionExpiry() {
   clearTimeout(expiryTimer)
   const token = getToken()
@@ -56,8 +53,6 @@ export function scheduleSessionExpiry() {
   }
   expiryTimer = window.setTimeout(() => handleSessionExpired(), msLeft)
 }
-
-// ---------- Fetch wrapper ----------
 interface ApiOptions extends RequestInit {
   auth?: boolean
 }
@@ -88,7 +83,6 @@ async function apiFetch(path: string, options: ApiOptions = {}): Promise<any> {
   }
 
   if (!res.ok) {
-    // Any 401 on a protected request = expired / missing / invalid token
     if (res.status === 401 && auth) {
       handleSessionExpired()
       throw new Error("Session expired")
@@ -101,8 +95,6 @@ async function apiFetch(path: string, options: ApiOptions = {}): Promise<any> {
 
   return data
 }
-
-// ---------- Auth ----------
 export function register(payload: {
   first_name: string
   last_name: string
@@ -128,7 +120,7 @@ export async function login(email: string, password: string) {
   const accessToken =
     data?.data?.access_token || data?.access_token || data?.data?.token || data?.token
 
-  if (accessToken) setToken(accessToken) // also starts the expiry timer
+  if (accessToken) setToken(accessToken) 
   return data
 }
 
@@ -144,7 +136,6 @@ export function verifyEmail(email: string, otp: string) {
   })
 }
 
-// ---------- Applicant profile ----------
 export const initProfile = () =>
   apiFetch("/admission/profile", { method: "POST", body: JSON.stringify({}) })
 

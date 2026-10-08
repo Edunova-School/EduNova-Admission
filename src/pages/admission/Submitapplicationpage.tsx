@@ -85,22 +85,28 @@ const handleSubmit = async () => {
       </div>
 
       <div className="bg-white rounded-2xl border border-black/5 p-6">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input type="checkbox" checked={confirmed} onChange={() => setConfirmed(!confirmed)} className="w-4 h-4 mt-0.5 rounded border-black/20 accent-[#1E3A8A]" />
-          <span className="text-sm text-black/70">I confirm that all information provided in this application is accurate and complete to the best of my knowledge.</span>
-        </label>
-        <button onClick={handleSubmit} disabled={!confirmed} className="w-full mt-6 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-4 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0">
-          Submit Application
-        </button>
-      </div>
+  <label className="flex items-start gap-3 cursor-pointer">
+    <input
+      type="checkbox"
+      checked={confirmed}
+      onChange={() => setConfirmed(!confirmed)}
+      className="w-4 h-4 mt-0.5 rounded border-black/20 accent-[#1E3A8A]"
+    />
 
-      <button
-  onClick={handleSubmit}
-  disabled={!confirmed || submitting}
-  className="w-full mt-6 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-4 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
->
-  {submitting ? "Submitting Application..." : "Submit Application"}
-</button>
+    <span className="text-sm text-black/70">
+      I confirm that all information provided in this application is
+      accurate and complete to the best of my knowledge.
+    </span>
+  </label>
+
+  <button
+    onClick={handleSubmit}
+    disabled={!confirmed || submitting}
+    className="w-full mt-6 bg-gradient-to-r from-[#14263F] to-[#1E3A8A] text-white text-sm font-semibold py-4 rounded-xl hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+  >
+    {submitting ? "Submitting Application..." : "Submit Application"}
+  </button>
+</div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { CheckCircle2, ArrowLeft, Clock, Sparkles } from "lucide-react"
+import { CheckCircle2, Clock, Sparkles } from "lucide-react"
 import { useApplication } from "./ApplicationContext"
 import { submitApplication } from "../../lib/api"
 import { trackConfigs } from "./trackconfig"
